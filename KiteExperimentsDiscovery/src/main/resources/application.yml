@@ -1,0 +1,11 @@
+server.port: ${DISCOVERY_SERVICE_PORT}
+
+
+eureka.client.register-with-eureka: false
+eureka.client.fetch-registry: false
+
+eureka.server:
+  peer-node-read-timeout-ms: 10000
+  renewalPercentThreshold: 0.1
+
+spring.boot.admin.client.url: ${BOOT_ADMIN_CLIENT_URL}

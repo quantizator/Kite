@@ -1,0 +1,2 @@
+spring.zipkin.base-url: ${ZIPKIN_URL}
+spring.sleuth.sampler.probability: 1

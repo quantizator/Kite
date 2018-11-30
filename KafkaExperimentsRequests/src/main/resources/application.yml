@@ -1,0 +1,122 @@
+spring.application.name: applications
+
+server.port: ${APPLICATIONS_SERVICE_PORT}
+
+management.server.port: ${APPLICATIONS_SERVICE_MANAGEMENT_PORT}
+management.security.enabled: false
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure.include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+
+info.app.name: Сервис работы с обращениями заявителей (прототип)
+info.app.description: Сервис работы с обращениями заявителей (прототип)
+info.app.version: 1.0.0
+
+management.health.binders.enabled: true
+
+eureka:
+  client:
+    registryFetchIntervalSeconds: 10
+    serviceUrl.defaultZone: ${EUREKA_DEFAULT_ZONE_URL}
+    healthcheck.enabled: true
+  instance:
+    leaseRenewalIntervalInSeconds: 10
+    health-check-url-path: /health
+    metadata-map:
+      management:
+        port: ${management.server.port}
+        context-path: /
+
+#spring.boot.admin.client.url: http://localhost:8080
+
+# Настройки Cloud Stream для Kafka Streams
+spring.cloud.stream.kafka.streams.binder.configuration.application.server: localhost:${APPLICATIONS_SERVICE_PORT}
+
+spring.cloud.stream.kafka.binder.brokers: ${KAFKA_BOOTSTRAP_SERVERS}
+
+
+spring.cloud.stream.kafka.streams.binder:
+  brokers: ${KAFKA_BOOTSTRAP_SERVERS}
+  zkNodes: ${KAFKA_ZK_NODES}
+  configuration:
+    commit.interval.ms: 1000
+    schema.registry.url: ${KAFKA_SCHEMA_REGISTRY}
+    auto.register.schemas: true
+    specific.avro.reader: true
+    max.schemas.per.subject: 1000
+    value.subject.name.strategy: io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
+    default.deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
+
+spring.cloud.stream.schemaRegistryClient.endpoint: ${KAFKA_SCHEMA_REGISTRY}
+#spring.cloud.stream.schema.avro.dynamicSchemaGenerationEnabled: true
+
+spring.cloud.stream.kafka.bindings.events-outgoing.producer:
+  configuration:
+    key.serializer: org.apache.kafka.common.serialization.StringSerializer
+    value.serializer: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerializer
+    commit.interval.ms: 1000
+    schema.registry.url: ${KAFKA_SCHEMA_REGISTRY}
+    auto.register.schemas: true
+    specific.avro.reader: true
+    max.schemas.per.subject: 1000
+    value.subject.name.strategy: io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
+    default.deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
+
+spring.cloud.stream.kafka.streams:
+  binder.configuration:
+    default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+    #    default.value.serde: test.documents.service.DomainEventJsonSerde
+    default.value.serde: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
+  bindings.events-incoming.consumer:
+    #    keySerde: test.cloud.streams.serde.PupilBaosSerde
+    #    keySerde: org.apache.kafka.common.serialization.Serdes$StringSerde
+    valueSerde: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
+    application-id: kite-requests-proto
+
+#spring.integration.readOnly.headers: contentType
+
+spring.cloud.stream.bindings.events-incoming:
+  destination: events-trail-new
+  group: ${spring.application.name}
+  consumer:
+    useNativeDecoding: true
+spring.cloud.stream.bindings.events-outgoing:
+  destination: events-trail-new
+  producer:
+    useNativeEncoding: true
+
+spring.cloud.stream.bindings.error.destination: events-errors
+
+spring.cloud.stream.bindings.events-errors:
+  destination: events-errors
+  group: ${spring.application.name}
+  consumer:
+    useNativeDecoding: true
+
+# Специфичные настройки приложения
+
+kite.eventstore.kafka:
+  stateStorePath: /event.stream
+  localStore.name: applications-store
+
+kite.rest.regulations.service.name: regulations
+kite.rest.documents.service.name: document-types
+
+#rest.documents.service.name: documents-service
+
+applications.published.datasource:
+  driverClassName: org.postgresql.Driver
+  jdbc-url: jdbc:postgresql://${POSTGRES_SERVER}/requests
+  username: ${POSTGRES_USER}
+  password: ${POSTGRES_PASSWORD}
+  type: com.zaxxer.hikari.HikariDataSource
+  pool-name: ${spring.application.name}
+  maximum-pool-size: ${POSTGRES_MAX_POOL_SIZE:10}
+  max-lifetime: ${POSTGRES_CONNECTION_LIFETIME:10000}
+  minimum-idle: 1
