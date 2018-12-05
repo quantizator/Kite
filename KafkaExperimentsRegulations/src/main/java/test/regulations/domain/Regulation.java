@@ -70,7 +70,7 @@ public class Regulation extends DomainAggregate<RegulationIdentifier> {
      * @param definition
      */
     public void registerCondition(int order, ConditionCode code, ConditionDefinition definition) {
-        raiseEvent(new RegulationConditionAdded(code, definition, order));
+        raiseEvent(new RegulationConditionAddedEvent(code, definition, order));
     }
 
     /**
@@ -137,7 +137,7 @@ public class Regulation extends DomainAggregate<RegulationIdentifier> {
     }
 
 
-    public void on(RegulationConditionAdded conditionAdded) {
+    public void on(RegulationConditionAddedEvent conditionAdded) {
         ConditionCode code = conditionAdded.conditionCode();
         Condition condition = conditionsMap.get(code);
         if (condition != null) {
@@ -276,7 +276,7 @@ public class Regulation extends DomainAggregate<RegulationIdentifier> {
 
 
     @Override
-    public AggregateCreatedEvent<RegulationIdentifier> createInitialEvent() {
+    public RegulationRegisteredEvent createInitialEvent() {
         return new RegulationRegisteredEvent(serviceId, allowedApplicantTypes, questionaryRequired, status);
     }
 

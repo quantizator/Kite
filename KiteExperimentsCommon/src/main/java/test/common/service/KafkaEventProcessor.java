@@ -2,14 +2,10 @@ package test.common.service;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.KTable;
 import org.springframework.cloud.stream.annotation.Input;
 import org.springframework.cloud.stream.annotation.Output;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.SubscribableChannel;
-import test.common.domain.DomainEvent;
-
-import java.util.List;
 
 /**
  * @author dmste
@@ -18,10 +14,12 @@ public interface KafkaEventProcessor {
 
     String OUTGOING = "events-outgoing";
     String INCOMING = "events-incoming";
-    String PROJECTING = "events-projecting";
+    String PROJECTING_OUTGOING = "events-projecting-outgoing";
+    String PROJECTING_INCOMING = "events-projecting-incoming";
 
     String EVENTS_ERRORS = "events-errors";
-    String ERROR_OUTGOING = "events-errors-outgoing";
+    String QUARANTINE_OUTGOING = "events-quarantine-outgoing";
+    String DLQ_OUTGOING = "dlq";
     String ERROR_INCOMING = "events-errors-incoming";
 
     /**
@@ -45,15 +43,17 @@ public interface KafkaEventProcessor {
      *
      * @return проекция
      */
-    @Input(PROJECTING)
-    KTable<String, List<DomainEvent>> projecting();
+    @Input(PROJECTING_INCOMING)
+    KStream<String, AggregateEventsHolder> projecting();
 
+    @Output(PROJECTING_OUTGOING)
+    KStream<String, AggregateEventsHolder> projectingOutgoing();
 
     @Input(EVENTS_ERRORS)
     SubscribableChannel eventErrors();
 
-//    @Output(ERROR_OUTGOING)
-//    MessageChannel errorOutgoing();
+    @Output(QUARANTINE_OUTGOING)
+    MessageChannel quarantineOutgoing();
 //
 //    @Input(ERROR_INCOMING)
 //    SubscribableChannel errorIncoming();

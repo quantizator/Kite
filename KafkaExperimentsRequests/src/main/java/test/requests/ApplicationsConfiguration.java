@@ -1,10 +1,6 @@
 package test.requests;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,15 +51,5 @@ public class ApplicationsConfiguration extends ApplicationConfiguration {
     public WebClient.Builder loadBalancedWebClientBuilder() {
         return WebClient.builder();
     }
-
-    @Bean
-    public Jackson2ObjectMapperBuilderCustomizer jacksonVisibilityCustomizer() {
-        return (builder) -> {
-            builder.visibility(PropertyAccessor.FIELD,
-                    JsonAutoDetect.Visibility.ANY);
-            builder.serializationInclusion(JsonInclude.Include.NON_NULL);
-        };
-    }
-
 
 }

@@ -24,6 +24,7 @@ public class DocumentTypeMementoBuilder extends AbstractMementoBuilder<DocumentT
     public static final String DESCRIPTION_FIELD = "description";
     public static final String ATTACHMENT_POLICY_FIELD = "attachmentPolicy";
     public static final String DOCUMENT_FIELDS = "documentFields";
+    public static final String USAGE_TYPE = "usageType";
 
 
     public DocumentTypeMementoBuilder(EventPublisher eventPublisher) {
@@ -43,9 +44,10 @@ public class DocumentTypeMementoBuilder extends AbstractMementoBuilder<DocumentT
         properties.put(DESCRIPTION_FIELD, documentType.metadata().description());
         properties.put(ATTACHMENT_POLICY_FIELD,
                 documentType.attachmentPolicy().name());
+        properties.put(USAGE_TYPE, documentType.usageType().name());
 
-        DocumentFieldMementoBuilder fieldMementoBuilder =
-                new DocumentFieldMementoBuilder(documentType, getPublisher());
+        DocumentFieldDefinitionMementoBuilder fieldMementoBuilder =
+                new DocumentFieldDefinitionMementoBuilder(documentType, getPublisher());
 
         Collection<DocumentFieldDefinition> fields = documentType.getAllDocumentFields();
 
@@ -68,16 +70,19 @@ public class DocumentTypeMementoBuilder extends AbstractMementoBuilder<DocumentT
         String description = getStringValue(DESCRIPTION_FIELD, properties);
         AttachmentPolicy attachmentPolicy =
                 AttachmentPolicy.valueOf(getStringValue(ATTACHMENT_POLICY_FIELD, properties));
+        String usageTypeValue = getStringValue(USAGE_TYPE, properties);
+
+        UsageType usageType = usageTypeValue != null ? UsageType.valueOf(usageTypeValue) : null;
 
         DocumentType type = new DocumentType(getPublisher(),
                 new DocumentTypeId(id),
                 new AggregateVersion(version),
                 new DocumentTypeCode(code, classifierCode),
                 new DocumentArtifactMetadata(name, description),
-                DocumentType.Status.valueOf(status), attachmentPolicy);
+                DocumentType.Status.valueOf(status), attachmentPolicy, usageType);
 
-        DocumentFieldMementoBuilder fieldMementoBuilder =
-                new DocumentFieldMementoBuilder(type, getPublisher());
+        DocumentFieldDefinitionMementoBuilder fieldMementoBuilder =
+                new DocumentFieldDefinitionMementoBuilder(type, getPublisher());
 
         List<Map<String, Object>> fields = getListOfValues(DOCUMENT_FIELDS,
                 properties);

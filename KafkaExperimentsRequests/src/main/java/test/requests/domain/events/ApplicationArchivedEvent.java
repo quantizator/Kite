@@ -5,10 +5,10 @@ import test.common.domain.AggregateNames;
 import test.common.domain.AggregateVersion;
 import test.requests.domain.Application;
 import test.requests.domain.ApplicationNumber;
-import test.requests.domain.EventTypes;
+import test.requests.domain.RequestsEventType;
 import test.requests.domain.OperatorId;
 
-public class ApplicationArchivedEvent extends AggregateDeletedEvent<Application, ApplicationNumber> {
+public class ApplicationArchivedEvent extends AggregateDeletedEvent<Application, ApplicationNumber, RequestsEventType> {
 
     private OperatorId operator;
 
@@ -34,7 +34,8 @@ public class ApplicationArchivedEvent extends AggregateDeletedEvent<Application,
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.APPLICATION_ARCHIVED;
+    public RequestsEventType eventType() {
+        return
+                RequestsEventType.APPLICATION_ARCHIVED;
     }
 }

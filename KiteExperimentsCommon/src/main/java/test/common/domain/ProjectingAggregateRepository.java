@@ -15,7 +15,7 @@ import test.common.service.IEventStore;
  * @see AggregateProjector
  */
 public abstract class ProjectingAggregateRepository<A extends DomainAggregate<I>, I extends AggregateIdentifier,
-        E extends AggregateCreatedEvent<I>> implements IAggregateRepository<A, I> {
+        E extends AggregateCreatedEvent<I, ?>> implements IAggregateRepository<A, I> {
 
 
     @Autowired
@@ -57,7 +57,7 @@ public abstract class ProjectingAggregateRepository<A extends DomainAggregate<I>
 
     @Override
     public Mono<Boolean> doDelete(A aggregate) {
-        AggregateDeletedEvent<A, I> aggregateDeletedEvent = createAggregateDeletedEvent(aggregate);
+        AggregateDeletedEvent<A, I, ?> aggregateDeletedEvent = createAggregateDeletedEvent(aggregate);
         return eventStore.appendToStream(aggregateDeletedEvent.aggregateName(),
                 aggregateDeletedEvent.aggregateIdentifier(), aggregateDeletedEvent)
                 .thenReturn(true)
@@ -65,7 +65,7 @@ public abstract class ProjectingAggregateRepository<A extends DomainAggregate<I>
     }
 
 
-    protected abstract <D extends AggregateDeletedEvent<A, I>> D createAggregateDeletedEvent(A aggregate);
+    protected abstract <D extends AggregateDeletedEvent<A, I, ?>> D createAggregateDeletedEvent(A aggregate);
 
     /**
      * Имя агрегата предметной области

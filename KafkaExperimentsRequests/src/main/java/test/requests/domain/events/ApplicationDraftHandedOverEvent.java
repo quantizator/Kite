@@ -8,7 +8,7 @@ import test.requests.domain.*;
 import java.util.List;
 
 @NoArgsConstructor
-public class ApplicationDraftHandedOverEvent extends AggregateCreatedEvent<ApplicationNumber> {
+public class ApplicationDraftHandedOverEvent extends AggregateCreatedEvent<ApplicationNumber, RequestsEventType> {
 
     private ApplicationType applicationType;
     private ApplicantId applicantId;
@@ -56,7 +56,7 @@ public class ApplicationDraftHandedOverEvent extends AggregateCreatedEvent<Appli
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.DRAFT_HANDED_OVER;
+    public RequestsEventType eventType() {
+        return RequestsEventType.DRAFT_HANDED_OVER;
     }
 }

@@ -6,8 +6,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import test.requests.domain.IPublishedApplicationHistoryRepository;
 import test.requests.domain.IPublishedApplicationsRepository;
 import test.requests.domain.published.PublishedApplication;
+import test.requests.domain.published.PublishedApplicationHistory;
 
 /**
  * @author dmste
@@ -18,6 +21,9 @@ public class ApplicationsController {
 
     @Autowired
     private IPublishedApplicationsRepository applicationRepository;
+
+    @Autowired
+    private IPublishedApplicationHistoryRepository historyRepository;
 
     /**
      *
@@ -33,7 +39,10 @@ public class ApplicationsController {
         return applicationRepository.searchByOperator(operatorId);
     }
 
-
+    @GetMapping("/history/{applicationNumber}")
+    public Mono<PublishedApplicationHistory> getApplicationHistory(@PathVariable String applicationNumber) {
+        return historyRepository.getApplicationHistory(applicationNumber);
+    }
 
 
 }

@@ -19,9 +19,9 @@ services:
             POSTGRES_CONNECTION_LIFETIME: "20000"
         healthcheck:
           test: "curl --silent --fail localhost:9198/health || exit 1"
-          interval: 50s
-          timeout: 30s
-          retries: 5
+          interval: 30s
+          timeout: 10s
+          retries: 10
         depends_on: [discovery]
         deploy:
             mode: replicated
@@ -40,16 +40,16 @@ services:
             KAFKA_SCHEMA_REGISTRY: "http://schema_registry:9090"
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
             ZIPKIN_URL: http://zipkin:9252
-            MONGO_SERVER: "mongo:9598"
+            MONGO_SERVER: "35.228.55.90:9098"
             MONGO_USER: "root"
             MONGO_PASSWORD: "root"
             MONGO_DB: "documents-new"
             MONGO_AUTH_DB: "admin"
         healthcheck:
           test: "curl --silent --fail localhost:9199/health || exit 1"
-          interval: 50s
-          timeout: 30s
-          retries: 5
+          interval: 30s
+          timeout: 10s
+          retries: 10
         depends_on: [discovery]
         deploy:
             mode: replicated
@@ -69,16 +69,16 @@ services:
             KAFKA_SCHEMA_REGISTRY: "http://schema_registry:9090"
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
             ZIPKIN_URL: http://zipkin:9252
-            MONGO_SERVER: "mongo:9598"
+            MONGO_SERVER: "35.228.55.90:9098"
             MONGO_USER: "root"
             MONGO_PASSWORD: "root"
             MONGO_DB: "documents-new"
             MONGO_AUTH_DB: "admin"
         healthcheck:
           test: "curl --silent --fail localhost:9196/health || exit 1"
-          interval: 50s
-          timeout: 30s
-          retries: 5
+          interval: 30s
+          timeout: 10s
+          retries: 10
         depends_on: [discovery]
         deploy:
             mode: replicated
@@ -96,8 +96,8 @@ services:
             KAFKA_BOOTSTRAP_SERVERS: "broker:9092"
         healthcheck:
           test: "curl --silent --fail localhost:8761/actuator/health || exit 1"
-          interval: 50s
-          timeout: 30s
+          interval: 30s
+          timeout: 10s
           retries: 5
         deploy:
             mode: replicated
@@ -112,11 +112,11 @@ services:
             GATEWAY_SERVICE_PORT: "8762"
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
             KAFKA_BOOTSTRAP_SERVERS: "broker:9092"
-        # healthcheck:
-          # test: ["CMD-SHELL", "curl", "--silent --fail localhost:8762/health || exit 1"]
-          # interval: 30s
-          # timeout: 30s
-          # retries: 5
+        healthcheck:
+          test: "curl --silent --fail localhost:8762/health || exit 1"
+          interval: 30s
+          timeout: 10s
+          retries: 5
         depends_on: [discovery]
         deploy:
             mode: replicated
@@ -129,11 +129,11 @@ services:
         ports: ["8080:8080"]
         environment:
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
-        # healthcheck:
-          # test: ["CMD-SHELL", "curl", "--silent --fail localhost:8080/health || exit 1"]
-          # interval: 30s
-          # timeout: 30s
-          # retries: 5
+        healthcheck:
+          test: "curl --silent --fail localhost:8080/health || exit 1"
+          interval: 30s
+          timeout: 10s
+          retries: 10
         depends_on: [discovery]
         deploy:
             mode: replicated

@@ -3,11 +3,11 @@ package test.requests.domain.events;
 import test.common.domain.AggregateDeletedEvent;
 import test.common.domain.AggregateNames;
 import test.common.domain.AggregateVersion;
-import test.requests.domain.EventTypes;
+import test.requests.domain.RequestsEventType;
 import test.requests.domain.INN;
 import test.requests.domain.Organization;
 
-public class OrganizationUnregisteredEvent extends AggregateDeletedEvent<Organization, INN> {
+public class OrganizationUnregisteredEvent extends AggregateDeletedEvent<Organization, INN, RequestsEventType> {
 
 
     public OrganizationUnregisteredEvent(Organization aggregate) {
@@ -24,7 +24,7 @@ public class OrganizationUnregisteredEvent extends AggregateDeletedEvent<Organiz
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.ORGANIZATION_UNREGISTERED;
+    public RequestsEventType eventType() {
+        return RequestsEventType.ORGANIZATION_UNREGISTERED;
     }
 }

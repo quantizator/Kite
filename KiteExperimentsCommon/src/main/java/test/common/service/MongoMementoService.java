@@ -1,20 +1,21 @@
 package test.common.service;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoCollection;
+import com.mongodb.reactivestreams.client.MongoDatabase;
+import com.mongodb.reactivestreams.client.Success;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.MapUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -24,31 +25,30 @@ import test.common.domain.Memento;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author dmste
  */
 @Component
-@EnableConfigurationProperties(MongoConfiguration.class)
+//@EnableConfigurationProperties(MongoConfiguration.class)
 @Slf4j
 public class MongoMementoService implements IAggregateMementoService {
 
     private static final String ID_FIELD_NAME = "_id";
 
-    @Autowired
     private MongoClient mongoClient;
 
-    @Autowired
     private MongoConfiguration configuration;
 
     @Override
     public Flux<Memento> getMemento(String aggregateName,
                                     Map<FilterAttribute, Object> filterAttributes) {
         Bson filterBson = buildFilter(filterAttributes);
-        Iterable<Document> documents =
-                getCollection(aggregateName).find(filterBson);
 
-        return Flux.fromIterable(documents).map(Memento::new);
+        return getCollection(aggregateName)
+                .flatMapMany(documents -> Flux.from(documents.find(filterBson)))
+                .map(Memento::new);
     }
 
     /**
@@ -62,72 +62,75 @@ public class MongoMementoService implements IAggregateMementoService {
         Document document =
                 new Document(values.getState());
 //        document.put(ID_FIELD_NAME, ObjectId.get());
-        MongoCollection<Document> documents = getOrCreateCollection(aggregateName,
-                filterAttributes);
-//        long matchCount = documents.countDocuments(filter);
-//        if (matchCount > 0) {
-//            UpdateResult result = documents.replaceOne(filter, document);
-//            log.info("Modified {} documents", result.getModifiedCount());
-//        } else {
-//            documents.insertOne(document);
-//            log.info("Inserted new document");
-//        }
-//        return Mono.just(true);
-        Bson filter = buildFilter(filterAttributes);
+        Mono<UpdateResult> result = getOrCreateCollection(aggregateName,
+                filterAttributes)
+                .flatMap(documents -> {
+                    Bson filter = buildFilter(filterAttributes);
 
-        ReplaceOptions options = new ReplaceOptions();
-        options.upsert(true);
-        log.debug("Mongo update started");
-        UpdateResult result = documents.replaceOne(filter, document, options);
-        log.debug("Mongo update finished");
-        boolean upserted = result.getUpsertedId() != null;
-        boolean modified = result.getModifiedCount() > 0;
+                    ReplaceOptions options = new ReplaceOptions();
+                    options.upsert(true);
 
-        if (upserted) {
-            log.info("Inserted document with ID {}", result.getUpsertedId());
-        } else if (modified) {
-            log.info("Modified {} documents", result.getModifiedCount());
-        }
-        return Mono.just(upserted || modified);
+                    return Mono.from(documents.replaceOne(filter, document, options));
+                });
 
+        return result.map(update -> {
+            boolean upserted = update.getUpsertedId() != null;
+            boolean modified = update.getModifiedCount() > 0;
+
+            if (upserted) {
+                log.info("Inserted document with ID {}", update.getUpsertedId());
+            } else if (modified) {
+                log.info("Modified {} documents", update.getModifiedCount());
+            }
+            return upserted || modified;
+
+        }).checkpoint();
     }
 
     @Override
     public Mono<Void> deleteMemento(String aggregateName, Map<FilterAttribute, Object> filterAttributes) {
-        MongoCollection<Document> collection = getCollection(aggregateName);
-        if (collection == null || collection.countDocuments() == 0) {
-            return Mono.empty();
-        }
-
-        Bson filter = buildFilter(filterAttributes);
-
-        return Mono.create(sink -> {
-            collection.deleteMany(filter);
-            sink.success();
-        });
+        return getCollection(aggregateName)
+                .filterWhen(collection -> Mono.from(collection.countDocuments()).map(count -> count > 0))
+                .flatMap(collection -> {
+                    Bson filter = buildFilter(filterAttributes);
+                    return Mono.from(collection.deleteMany(filter));
+                }).then().checkpoint();
     }
 
-    private MongoCollection<Document> getCollection(String aggregateName) {
+    private Mono<MongoCollection<Document>> getCollection(String aggregateName) {
         return getOrCreateCollection(aggregateName, null);
     }
 
-    private MongoCollection<Document> getOrCreateCollection(String aggregateName, Map<FilterAttribute, Object> attributes) {
+    private Mono<MongoCollection<Document>> getOrCreateCollection(String aggregateName, Map<FilterAttribute, Object> attributes) {
         MongoDatabase database =
                 mongoClient.getDatabase(configuration.getDatabase().getName());
         MongoCollection<Document> collection =
                 database.getCollection(aggregateName);
 
-        if (collection == null && !MapUtils.isEmpty(attributes)) {
-            database.createCollection(aggregateName);
-            final MongoCollection newCollection = database.getCollection(aggregateName);
-
-            attributes.keySet().stream().filter(FilterAttribute::isUnique)
-                    .forEach(a -> newCollection.createIndex(Indexes.text(a.getAttributeName()),
-                            new IndexOptions().unique(true)));
-
-            collection = newCollection;
+        if (collection != null) {
+            return Mono.just(collection);
         }
-        return collection;
+
+        if (MapUtils.isEmpty(attributes)) {
+            return Mono.empty();
+        }
+
+        return Mono.from(database.createCollection(aggregateName))
+                .<MongoCollection<Document>>handle((success, sink) -> {
+                    if (Success.SUCCESS != success) {
+                        sink.error(new RuntimeException(
+                                String.format("Error occurred while creating new collection for aggregate [%s]", aggregateName)));
+                        return;
+                    }
+                    sink.next(database.getCollection(aggregateName));
+                    sink.complete();
+                }).doOnSuccess(newCollection -> {
+                    Flux.concat(attributes.keySet().stream().filter(FilterAttribute::isUnique)
+                            .map(a -> newCollection.createIndex(Indexes.text(a.getAttributeName()),
+                                    new IndexOptions().unique(true))).collect(Collectors.toList()))
+                            .subscribe(index -> log.info("Index created with result [{}]", index));
+
+                });
     }
 
     private Bson buildFilter(Map<FilterAttribute, Object> attributes) {
@@ -147,5 +150,12 @@ public class MongoMementoService implements IAggregateMementoService {
             }
         }
         return result;
+    }
+
+    @Autowired
+    @Qualifier("mementoMongoConfiguration")
+    public void setConfiguration(MongoConfiguration configuration) {
+        this.configuration = configuration;
+        this.mongoClient = MongoClientFactory.createClient(configuration);
     }
 }

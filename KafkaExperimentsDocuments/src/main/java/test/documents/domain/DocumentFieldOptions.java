@@ -14,9 +14,10 @@ public class DocumentFieldOptions {
         this.options = new TreeMap<>();
     }
 
-    public DocumentFieldOptions(List<String> options) {
+    public DocumentFieldOptions(Set<String> options) {
+        List<String> optionsList = options.stream().collect(Collectors.toList());
         this.options = IntStream.range(0, options.size())
-                .mapToObj(i -> new DocumentFieldOption(i, options.get(i)))
+                .mapToObj(i -> new DocumentFieldOption(i, optionsList.get(i)))
                 .collect(Collectors.toMap(DocumentFieldOption::order,
                         o -> o));
     }

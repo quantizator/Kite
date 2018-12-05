@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import test.common.domain.EventPublisher;
-import test.common.service.CircuitBreakerHelper;
 import test.common.service.ElementNotUniqueException;
 import test.common.service.NonReturningCommandHandler;
 import test.requests.domain.IIndividualsRepository;
@@ -45,9 +44,7 @@ public class RegisterIndividualCommandHandler implements NonReturningCommandHand
 
         Mono<Individual> result = Mono.just(builder.build().getAggregate());
 
-        return CircuitBreakerHelper.wrapMonoWithHystrix(result, command.commandName(), Mono.empty())
-                .doOnSuccess(i -> log.info("Created new individual with SNILS [{}]", command.getSnils()))
-                .then();
+        return result.then();
     }
 
     private Mono<Individual> retrieveExisting(SNILS applicantSnils) {

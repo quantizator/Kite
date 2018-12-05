@@ -13,6 +13,7 @@ import lombok.*;
 @Getter
 @Setter
 @RequiredArgsConstructor
+@NoArgsConstructor
 @EqualsAndHashCode
 @JsonClassDescription("Заявление на получение услуги заявителем")
 public class PublishedApplication {

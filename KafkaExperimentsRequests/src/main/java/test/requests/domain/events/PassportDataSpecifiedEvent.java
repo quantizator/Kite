@@ -4,12 +4,12 @@ import lombok.NoArgsConstructor;
 import test.common.domain.AggregateNames;
 import test.common.domain.AggregateVersion;
 import test.common.domain.DomainEvent;
-import test.requests.domain.EventTypes;
 import test.requests.domain.PassportData;
+import test.requests.domain.RequestsEventType;
 import test.requests.domain.SNILS;
 
 @NoArgsConstructor
-public class PassportDataSpecifiedEvent extends DomainEvent<SNILS> {
+public class PassportDataSpecifiedEvent extends DomainEvent<SNILS, RequestsEventType> {
 
     private PassportData passportData;
 
@@ -28,8 +28,8 @@ public class PassportDataSpecifiedEvent extends DomainEvent<SNILS> {
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.PASSPORT_DATA_SPECIFIED;
+    public RequestsEventType eventType() {
+        return RequestsEventType.PASSPORT_DATA_SPECIFIED;
     }
 
     public PassportData passportData() {

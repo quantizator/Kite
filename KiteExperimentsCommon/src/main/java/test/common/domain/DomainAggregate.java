@@ -137,7 +137,7 @@ public abstract class DomainAggregate<I extends AggregateIdentifier> {
         return aggregateMetadata().name();
     }
 
-    public abstract AggregateCreatedEvent<I> createInitialEvent();
+    public abstract AggregateCreatedEvent<I, ?> createInitialEvent();
 
     public I identifier() {
         return identifier;

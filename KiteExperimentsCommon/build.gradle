@@ -4,14 +4,15 @@ buildscript {
     }
     repositories {
         mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "io.spring.gradle:dependency-management-plugin:0.5.2.RELEASE"
         classpath "com.commercehub.gradle.plugin:gradle-avro-plugin:0.15.1"
-        classpath "org.postgresql:postgresql:42.2.5"
-        classpath "org.jooq:jooq-codegen:3.11.5"
-        classpath "gradle.plugin.org.liquibase:liquibase-gradle-plugin:2.0.1"
+//        classpath "org.postgresql:postgresql:42.2.5"
+//        classpath "org.jooq:jooq-codegen:3.11.5"
+//        classpath "gradle.plugin.org.liquibase:liquibase-gradle-plugin:2.0.1"
         classpath "org.yaml:snakeyaml:1.23"
     }
 }
@@ -26,8 +27,15 @@ configurations {
     implementation {
         exclude module: "spring-boot-starter-tomcat"
         exclude module: 'spring-boot-starter-logging'
+        resolutionStrategy {
+            dependencySubstitution {
+                substitute(module('org.apache.kafka:kafka-streams:2.0.0'))
+                        .with(module('org.apache.kafka:kafka-streams:2.0.1'))
+            }
+        }
     }
 }
+
 
 apply plugin: 'java'
 apply plugin: 'java-library'
@@ -53,19 +61,20 @@ repositories {
     maven { url "https://repo.spring.io/milestone" }
     maven { url "https://repo.spring.io/libs-milestone" }
     maven { url "http://packages.confluent.io/maven" }
+    maven { url "https://oss.sonatype.org/content/repositories/releases/" }
 }
 
 
 ext {
     springCloudVersion = 'Greenwich.M1'
-    springCloudStreamVersion = 'Fishtown.RC1'
+    springCloudStreamVersion = 'Fishtown.RC2'
 }
-
-apply plugin: "org.liquibase.gradle"
 
 dependencies {
     implementation('org.springframework.boot:spring-boot-starter-aop')
-    implementation('org.apache.kafka:kafka-streams')
+    implementation('org.apache.kafka:kafka-streams:2.0.1') {
+       force = true
+    }
     implementation('org.springframework.cloud:spring-cloud-stream')
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     api('org.springframework.cloud:spring-cloud-stream-schema')
@@ -81,15 +90,17 @@ dependencies {
     implementation("io.projectreactor.kafka:reactor-kafka")
     implementation("org.apache.kafka:kafka-log4j-appender:1.0.0")
     implementation("org.apache.avro:avro:1.8.2")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.9.7")
     
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-avro:2.9.7")
     implementation("com.google.code.gson:gson:2.8.5")
     implementation("org.apache.commons:commons-lang3:3.7")
 
     implementation('javax.validation:validation-api:2.0.1.Final')
     implementation("org.hibernate:hibernate-validator:6.0.13.Final")
-    implementation("org.mongodb:mongo-java-driver:3.8.2")
-    implementation("org.mongodb:bson:3.8.2")
+    implementation("org.mongodb:mongodb-driver-core:3.9.0")
+    implementation("org.mongodb:mongodb-driver-async:3.9.0")
+    implementation("org.mongodb:bson:3.9.0")
+    implementation("org.mongodb:mongodb-driver-reactivestreams:1.10.0")
     implementation("org.jooq:jooq:3.11.5")
     implementation("org.jooq:jooq-codegen:3.11.5")
 

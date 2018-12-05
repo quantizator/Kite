@@ -3,10 +3,10 @@ package test.requests.domain.events;
 import test.common.domain.AggregateNames;
 import test.common.domain.AggregateVersion;
 import test.common.domain.DomainEvent;
-import test.requests.domain.EventTypes;
+import test.requests.domain.RequestsEventType;
 import test.requests.domain.SNILS;
 
-public class IndividualAccountActivatedEvent extends DomainEvent<SNILS> {
+public class IndividualAccountActivatedEvent extends DomainEvent<SNILS, RequestsEventType> {
 
     public IndividualAccountActivatedEvent() {
     }
@@ -21,7 +21,7 @@ public class IndividualAccountActivatedEvent extends DomainEvent<SNILS> {
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.INDIVIDUAL_ACCOUNT_ACTIVATED;
+    public RequestsEventType eventType() {
+        return RequestsEventType.INDIVIDUAL_ACCOUNT_ACTIVATED;
     }
 }

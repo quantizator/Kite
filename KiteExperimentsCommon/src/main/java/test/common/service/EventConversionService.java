@@ -94,6 +94,20 @@ public class EventConversionService {
     }
 
     /**
+     *
+     * @param record
+     * @return
+     */
+    public boolean isEventRecord(SpecificRecord record) {
+        if (isDomainEventRecord(record)) {
+            return true;
+        }
+        if (foreignConverters == null) {
+            return false;
+        }
+        return foreignConverters.stream().anyMatch(c -> c.recordType().equals(record.getClass()));
+    }
+    /**
      * @param event
      * @return
      */

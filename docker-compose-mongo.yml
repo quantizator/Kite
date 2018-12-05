@@ -3,7 +3,7 @@ services:
   mongo:
     image: mongo
     ports: ["9098:27017"]
-    command: [ "mongod", "--bind_ip_all"]
+    # command: [ "mongod", "--bind_ip_all"]
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root

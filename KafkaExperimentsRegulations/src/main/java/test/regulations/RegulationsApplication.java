@@ -9,6 +9,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.reactive.config.EnableWebFlux;
+import test.common.configuration.EventStoreConfiguration;
 import test.common.configuration.MongoConfiguration;
 import test.common.service.KafkaEventProcessor;
 
@@ -16,8 +17,7 @@ import test.common.service.KafkaEventProcessor;
 @EnableWebFlux
 @EnableDiscoveryClient
 @EnableBinding(KafkaEventProcessor.class)
-@Import({RegulationsEventStoreConfiguration.class,
-        MongoConfiguration.class, RegulationsConfiguration.class})
+@Import({MongoConfiguration.class, RegulationsConfiguration.class, EventStoreConfiguration.class})
 @EnableCircuitBreaker
 //@ComponentScan(basePackages = {"test.regulations.rest", "test.common.rest"})
 public class RegulationsApplication {

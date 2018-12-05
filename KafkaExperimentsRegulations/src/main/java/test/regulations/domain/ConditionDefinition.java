@@ -1,5 +1,8 @@
 package test.regulations.domain;
 
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor
 public class ConditionDefinition {
 
     private String name;

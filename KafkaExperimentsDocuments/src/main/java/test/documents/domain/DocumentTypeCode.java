@@ -1,11 +1,13 @@
 package test.documents.domain;
 
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import test.common.domain.DocumentTypeId;
 
 @ToString
 @EqualsAndHashCode(of = {"code"})
+@NoArgsConstructor
 public class DocumentTypeCode {
 
     private String code;

@@ -27,7 +27,7 @@ public abstract class MementoBasedAggregateRepository<A extends DomainAggregate<
     @Override
     public Mono<A> get(I id) {
         Map<String, Object> filterMap = buildUniquenessFilterMap(id, mementoBuilder);
-        return checkAndReturnUnique(id.toString(), getByFilter(filterMap));
+        return checkAndReturnUnique(id.toString(), getByFilter(filterMap), true);
     }
 
     protected Map<String, Object> buildUniquenessFilterMap(I identifier, IAggregateMementoBuilder<A> builder) {
@@ -86,13 +86,21 @@ public abstract class MementoBasedAggregateRepository<A extends DomainAggregate<
     }
 
     protected Mono<A> checkAndReturnUnique(String identifier,
-                                           Flux<A> series) {
-        return series.single()
-                .onErrorMap(IndexOutOfBoundsException.class,
-                        e -> new ElementNotUniqueException(identifier))
-                .onErrorMap(NoSuchElementException.class,
-                        e -> new ElementNotFoundException(identifier));
+                                           Flux<A> series, boolean failOnEmpty) {
+        Mono<A> single = series.single();
 
+        if (failOnEmpty) {
+            single = single
+                    .onErrorMap(NoSuchElementException.class,
+                            e -> new ElementNotFoundException(identifier));
+
+        } else {
+            single = single.onErrorResume(NoSuchElementException.class, e -> Mono.empty());
+        }
+
+        single = single.onErrorMap(IndexOutOfBoundsException.class,
+                e -> new ElementNotUniqueException(identifier));
+        return single;
     }
 
     protected abstract String aggregateName();

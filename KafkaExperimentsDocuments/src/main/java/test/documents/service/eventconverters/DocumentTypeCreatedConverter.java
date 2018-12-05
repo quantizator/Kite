@@ -6,6 +6,7 @@ import test.common.service.DomainEventConverter;
 import test.documents.domain.AttachmentPolicy;
 import test.documents.domain.DocumentArtifactMetadata;
 import test.documents.domain.DocumentTypeCode;
+import test.documents.domain.UsageType;
 import test.documents.domain.events.DocumentTypeCreatedEvent;
 import test.documents.domain.events.avro.DocumentTypeCreated;
 
@@ -25,6 +26,7 @@ public class DocumentTypeCreatedConverter implements DomainEventConverter<Docume
                 .setAttachmentPolicy(domainEvent.attachmentPolicy().name())
                 .setName(domainEvent.metadata().name())
                 .setDescription(domainEvent.metadata().description())
+                .setUsageType(domainEvent.usageType().name())
                 .build();
     }
 
@@ -37,7 +39,8 @@ public class DocumentTypeCreatedConverter implements DomainEventConverter<Docume
                         record.getClassifierCode()),
                 new DocumentArtifactMetadata(record.getName(),
                         record.getDescription()),
-                AttachmentPolicy.valueOf(record.getAttachmentPolicy()));
+                AttachmentPolicy.valueOf(record.getAttachmentPolicy()),
+                UsageType.valueOf(record.getUsageType()));
     }
 
     @Override

@@ -11,11 +11,6 @@ public class Organization extends Applicant<INN> {
     private String shortName;
     private String longName;
 
-    @Override
-    public AggregateCreatedEvent<INN> createInitialEvent() {
-        return new OrganizationRegisteredEvent(shortName, longName);
-    }
-
     public Organization(EventPublisher publisher, INN identifier, AggregateVersion version, String shortName, String longName) {
         super(publisher, identifier, version, ApplicantType.LEGAL);
         this.shortName = shortName;
@@ -35,4 +30,8 @@ public class Organization extends Applicant<INN> {
     }
 
 
+    @Override
+    public OrganizationRegisteredEvent createInitialEvent() {
+        return new OrganizationRegisteredEvent(shortName, longName);
+    }
 }

@@ -1,12 +1,10 @@
 package test.documents;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import test.common.configuration.ApplicationConfiguration;
+import test.common.configuration.MongoConfiguration;
 import test.common.domain.AggregateNames;
 import test.common.domain.DocumentId;
 import test.common.domain.DocumentTypeId;
@@ -22,6 +20,12 @@ import java.util.UUID;
  */
 @Configuration
 public class DocumentTypesConfiguration extends ApplicationConfiguration {
+
+    @Bean("mementoMongoConfiguration")
+    @ConfigurationProperties(prefix = "kite.mongo")
+    public MongoConfiguration mongoConfiguration() {
+        return new MongoConfiguration();
+    }
 
     @Bean
     public IAggregateMementoService mementoService() {
@@ -53,15 +57,6 @@ public class DocumentTypesConfiguration extends ApplicationConfiguration {
             public String aggregateName() {
                 return AggregateNames.DOCUMENTS;
             }
-        };
-    }
-
-    @Bean
-    public Jackson2ObjectMapperBuilderCustomizer jacksonVisibilityCustomizer() {
-        return (builder) -> {
-            builder.visibility(PropertyAccessor.FIELD,
-                    JsonAutoDetect.Visibility.ANY);
-            builder.serializationInclusion(JsonInclude.Include.NON_NULL);
         };
     }
 }

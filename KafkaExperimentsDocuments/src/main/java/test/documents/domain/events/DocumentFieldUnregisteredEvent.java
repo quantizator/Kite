@@ -13,7 +13,7 @@ import test.documents.domain.DocumentFieldCode;
  */
 @Setter
 @Getter
-public class DocumentFieldUnregisteredEvent extends DomainEvent<DocumentTypeId> {
+public class DocumentFieldUnregisteredEvent extends DomainEvent<DocumentTypeId, DocumentsEventType> {
 
     private DocumentFieldCode fieldCode;
 
@@ -41,7 +41,7 @@ public class DocumentFieldUnregisteredEvent extends DomainEvent<DocumentTypeId> 
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.DOCUMENT_FIELD_UNREGISTERED;
+    public DocumentsEventType eventType() {
+        return DocumentsEventType.DOCUMENT_FIELD_UNREGISTERED;
     }
 }

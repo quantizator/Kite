@@ -8,7 +8,8 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-public abstract class AggregateCreatedEvent<I extends AggregateIdentifier> extends DomainEvent<I> {
+public abstract class AggregateCreatedEvent<I extends AggregateIdentifier,
+        T extends EventType> extends DomainEvent<I, T> {
 
     public AggregateCreatedEvent() {
     }

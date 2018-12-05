@@ -106,12 +106,14 @@ public class RegulationMementoBuilder extends AbstractMementoBuilder<Regulation>
         ApplicantQuestionnary questionary = questionaryDocumentTypeId != null ?
                 new ApplicantQuestionnary(new DocumentTypeId(questionaryDocumentTypeId)) : null;
 
+        RegulationTerm term = enactmentDate != null ? new RegulationTerm(enactmentDate, terminationDate) : null;
+
         Regulation regulation = new Regulation(getPublisher(), new RegulationIdentifier(number, new Date(date)),
                 new AggregateVersion(version), new ServiceId(serviceId),
                 new RegulationMetadata(name, description, issuedAuthority),
                 applicantTypesList, questionaryRequired,
                 questionary,
-                new RegulationTerm(enactmentDate, terminationDate),
+                term,
                 Regulation.Status.valueOf(status));
 
         RegulationConditionMementoBuilder conditionMementoBuilder =

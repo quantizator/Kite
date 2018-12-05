@@ -6,7 +6,7 @@ import lombok.*;
 @ToString
 @Setter
 @Getter
-public abstract class DomainEvent<I extends AggregateIdentifier> extends Event {
+public abstract class DomainEvent<I extends AggregateIdentifier, T extends EventType> extends Event {
 
 
     protected I identifier;
@@ -36,7 +36,11 @@ public abstract class DomainEvent<I extends AggregateIdentifier> extends Event {
         return version;
     }
 
+    /**
+     * Наименование аг
+     * @return
+     */
     public abstract String aggregateName();
 
-    public abstract String eventType();
+    public abstract T eventType();
 }

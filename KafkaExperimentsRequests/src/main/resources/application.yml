@@ -38,7 +38,11 @@ eureka:
 # Настройки Cloud Stream для Kafka Streams
 spring.cloud.stream.kafka.streams.binder.configuration.application.server: localhost:${APPLICATIONS_SERVICE_PORT}
 
-spring.cloud.stream.kafka.binder.brokers: ${KAFKA_BOOTSTRAP_SERVERS}
+spring.cloud.stream.kafka.binder:
+  brokers: ${KAFKA_BOOTSTRAP_SERVERS}
+  autoAddPartitions: true
+  replicationFactor: 2
+  minPartitionCount: 2
 
 
 spring.cloud.stream.kafka.streams.binder:
@@ -57,10 +61,14 @@ spring.cloud.stream.schemaRegistryClient.endpoint: ${KAFKA_SCHEMA_REGISTRY}
 #spring.cloud.stream.schema.avro.dynamicSchemaGenerationEnabled: true
 
 spring.cloud.stream.kafka.bindings.events-outgoing.producer:
+  bufferSize: 0
   configuration:
     key.serializer: org.apache.kafka.common.serialization.StringSerializer
     value.serializer: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerializer
-    commit.interval.ms: 1000
+    commit.interval.ms: 50
+    metadata.max.age.ms: 10000
+    batch.size: 0
+    retention.ms: -1
     schema.registry.url: ${KAFKA_SCHEMA_REGISTRY}
     auto.register.schemas: true
     specific.avro.reader: true
@@ -68,42 +76,75 @@ spring.cloud.stream.kafka.bindings.events-outgoing.producer:
     value.subject.name.strategy: io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
     default.deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
 
+spring.cloud.stream.kafka.bindings.events-projecting-outgoing.producer:
+  bufferSize: 0
+  configuration:
+    commit.interval.ms: 50
+
 spring.cloud.stream.kafka.streams:
   binder.configuration:
+    state.dir: ${KAFKA_STATE_DIR:/tmp/kafka-state}
     default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-    #    default.value.serde: test.documents.service.DomainEventJsonSerde
     default.value.serde: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
   bindings.events-incoming.consumer:
-    #    keySerde: test.cloud.streams.serde.PupilBaosSerde
-    #    keySerde: org.apache.kafka.common.serialization.Serdes$StringSerde
     valueSerde: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
-    application-id: kite-requests-proto
+    application-id: ${spring.application.name}
+  bindings.events-projecting-outgoing.producer:
+    valueSerde: test.common.service.EventHolderSerde
+  bindings.events-projecting-incoming.consumer:
+    valueSerde: test.common.service.EventHolderSerde
+    application-id: ${spring.application.name}
 
 #spring.integration.readOnly.headers: contentType
 
 spring.cloud.stream.bindings.events-incoming:
-  destination: events-trail-new
+  destination: ${EVENTS_TOPIC_NAME}
   group: ${spring.application.name}
   consumer:
+    partitioned: true
     useNativeDecoding: true
 spring.cloud.stream.bindings.events-outgoing:
-  destination: events-trail-new
+  destination: ${EVENTS_TOPIC_NAME}
   producer:
+    partition-key-expression: headers['kafka_messageKey']
     useNativeEncoding: true
-
-spring.cloud.stream.bindings.error.destination: events-errors
-
-spring.cloud.stream.bindings.events-errors:
-  destination: events-errors
+spring.cloud.stream.bindings.events-projecting-incoming:
+  destination: ${SNAPSHOT_TOPIC_NAME}
   group: ${spring.application.name}
   consumer:
+    partitioned: true
     useNativeDecoding: true
+spring.cloud.stream.bindings.events-projecting-outgoing:
+  destination: ${SNAPSHOT_TOPIC_NAME}
+  producer:
+    partition-key-expression: headers['kafka_messageKey']
+    useNativeEncoding: true
+spring.cloud.stream.bindings.events-quarantine-outgoing:
+  destinations: events-quarantine
+  producer:
+    partition-key-expression: headers['kafka_messageKey']
+    useNativeEncoding: true
+spring.cloud.stream.bindings.error.destination: events-errors
+
+#spring.cloud.stream.bindings.events-errors:
+#  destination: events-errors
+#  group: ${spring.application.name}
+#  consumer:
+#    useNativeDecoding: true
 
 # Специфичные настройки приложения
 
-kite.eventstore.kafka:
-  stateStorePath: /event.stream
-  localStore.name: applications-store
+kite.eventstore:
+  kafka:
+    stateStorePath: /event.stream
+    localStore.name: ${STATE_STORE_NAME}
+  mongo:
+    dbAddress: mongodb://${MONGO_SERVER}
+    database.name: ${MONGO_EVENTS_DB}
+    username: ${MONGO_USER}
+    password: ${MONGO_PASSWORD}
+    authenticationDb: ${MONGO_AUTH_DB}
+
 
 kite.rest.regulations.service.name: regulations
 kite.rest.documents.service.name: document-types
@@ -120,3 +161,6 @@ applications.published.datasource:
   maximum-pool-size: ${POSTGRES_MAX_POOL_SIZE:10}
   max-lifetime: ${POSTGRES_CONNECTION_LIFETIME:10000}
   minimum-idle: 1
+
+
+spring.aop.proxy-target-class: true

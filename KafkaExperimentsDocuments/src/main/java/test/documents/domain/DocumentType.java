@@ -8,16 +8,15 @@ import test.documents.domain.events.DocumentFieldRegisteredEvent;
 import test.documents.domain.events.DocumentFieldUnregisteredEvent;
 import test.documents.domain.events.DocumentTypeCreatedEvent;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @AggregateMetadata(name = AggregateNames.DOCUMENT_TYPES)
 public class DocumentType extends DomainAggregate<DocumentTypeId> {
 
+
+    private static final UsageType USAGE_TYPE_DEFAULT = UsageType.EXTERNAL;
 
     public enum Status {
         DRAFT, ACTIVE, INACTIVE
@@ -30,15 +29,17 @@ public class DocumentType extends DomainAggregate<DocumentTypeId> {
     private Map<DocumentFieldCode, DocumentFieldDefinition> documentFields = new HashMap<>();
 
     private Status status;
+    private UsageType usageType;
 
     public DocumentType(EventPublisher publisher, DocumentTypeId identifier, AggregateVersion version,
                         DocumentTypeCode documentTypeCode, DocumentArtifactMetadata metadata, Status status,
-                        AttachmentPolicy attachmentPolicy) {
+                        AttachmentPolicy attachmentPolicy, UsageType usageType) {
         super(publisher, identifier, version);
         this.documentTypeCode = documentTypeCode;
         this.metadata = metadata;
         this.attachmentPolicy = attachmentPolicy;
         this.status = status;
+        this.usageType = usageType != null ? usageType : USAGE_TYPE_DEFAULT;
     }
 
     public DocumentType(EventPublisher publisher, DocumentTypeId id, DocumentTypeCode code,
@@ -49,9 +50,11 @@ public class DocumentType extends DomainAggregate<DocumentTypeId> {
         this.attachmentPolicy = attachmentPolicy;
         this.status = Status.DRAFT;
 
+        // TODO: remove hard code
+        this.usageType = USAGE_TYPE_DEFAULT;
+
         done();
     }
-
 
 
     /**
@@ -85,10 +88,10 @@ public class DocumentType extends DomainAggregate<DocumentTypeId> {
      * @param options
      */
     public boolean registerDocumentFieldWithOptions(DocumentFieldCode fieldCode,
-                                         DocumentFieldType fieldType,
-                                         boolean required,
-                                         DocumentArtifactMetadata metadata,
-                                                    List<String> options) {
+                                                    DocumentFieldType fieldType,
+                                                    boolean required,
+                                                    DocumentArtifactMetadata metadata,
+                                                    Set<String> options) {
         if (documentFields.containsKey(fieldCode)) {
             log.warn("Field with code [{0}] already exists", fieldCode);
             return false;
@@ -137,10 +140,15 @@ public class DocumentType extends DomainAggregate<DocumentTypeId> {
 
     @Override
     public DocumentTypeCreatedEvent createInitialEvent() {
-        return new DocumentTypeCreatedEvent(documentTypeCode, metadata, attachmentPolicy);
+        return new DocumentTypeCreatedEvent(documentTypeCode, metadata, attachmentPolicy, usageType);
     }
 
-    public Status status() { return status; }
+    public Status status() {
+        return status;
+    }
+
+    public UsageType usageType() { return usageType; }
+
     /**
      * Проверяет, готов ли тип документа к использованию в системе.
      *
@@ -164,7 +172,7 @@ public class DocumentType extends DomainAggregate<DocumentTypeId> {
         DocumentFieldType fieldType = fieldRegistered.fieldType();
         boolean isRequired = fieldRegistered.isRequired();
         DocumentArtifactMetadata metadata = fieldRegistered.metadata();
-        List<String> options = fieldRegistered.options();
+        Set<String> options = fieldRegistered.options();
 
         final DocumentFieldDefinition field;
         if (CollectionUtils.isEmpty(options)) {

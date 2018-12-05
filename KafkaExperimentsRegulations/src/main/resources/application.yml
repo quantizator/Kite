@@ -35,7 +35,7 @@ info.app.description: Сервис работы с регламентами ус
 info.app.version: 1.0.0
 
 # Настройки Cloud Stream для Kafka Streams
-#spring.cloud.stream.kafka.streams.binder.configuration.application.server: localhost:8080
+spring.cloud.stream.kafka.streams.binder.configuration.application.server: localhost:${REGULATIONS_SERVICE_PORT}
 spring.cloud.stream.kafka.binder.brokers: ${KAFKA_BOOTSTRAP_SERVERS}
 
 spring.cloud.stream.kafka.streams.binder:
@@ -54,10 +54,14 @@ spring.cloud.stream.schemaRegistryClient.endpoint: ${KAFKA_SCHEMA_REGISTRY}
 #spring.cloud.stream.schema.avro.dynamicSchemaGenerationEnabled: true
 
 spring.cloud.stream.kafka.bindings.events-outgoing.producer:
+  bufferSize: 0
   configuration:
     key.serializer: org.apache.kafka.common.serialization.StringSerializer
     value.serializer: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerializer
-    commit.interval.ms: 1000
+    commit.interval.ms: 50
+    metadata.max.age.ms: 10000
+    batch.size: 0
+    retention.ms: -1
     schema.registry.url: ${KAFKA_SCHEMA_REGISTRY}
     auto.register.schemas: true
     specific.avro.reader: true
@@ -65,8 +69,14 @@ spring.cloud.stream.kafka.bindings.events-outgoing.producer:
     value.subject.name.strategy: io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
     default.deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
 
+spring.cloud.stream.kafka.bindings.events-projecting-outgoing.producer:
+  bufferSize: 0
+  configuration:
+    commit.interval.ms: 50
+
 spring.cloud.stream.kafka.streams:
   binder.configuration:
+    state.dir: ${KAFKA_STATE_DIR:/tmp/kafka-state}
     default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
     #    default.value.serde: test.documents.service.DomainEventJsonSerde
     default.value.serde: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
@@ -74,29 +84,58 @@ spring.cloud.stream.kafka.streams:
     #    keySerde: test.cloud.streams.serde.PupilBaosSerde
     #    keySerde: org.apache.kafka.common.serialization.Serdes$StringSerde
     valueSerde: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
-    application-id: kite-regulations-proto
+    application-id: ${spring.application.name}
+  bindings.events-projecting-outgoing.producer:
+    valueSerde: test.common.service.EventHolderSerde
+  bindings.events-projecting-incoming.consumer:
+    valueSerde: test.common.service.EventHolderSerde
+    application-id: ${spring.application.name}
 
 #spring.integration.readOnly.headers: contentType
 
 spring.cloud.stream.bindings.events-incoming:
-  destination: events-trail-new
+  destination: ${EVENTS_TOPIC_NAME}
   group: ${spring.application.name}
   consumer:
+    partitioned: true
     useNativeDecoding: true
 spring.cloud.stream.bindings.events-outgoing:
-  destination: events-trail-new
+  destination: ${EVENTS_TOPIC_NAME}
   producer:
+    partition-key-expression: headers['kafka_messageKey']
     useNativeEncoding: true
-
+spring.cloud.stream.bindings.events-projecting-incoming:
+  destination: ${SNAPSHOT_TOPIC_NAME}
+  group: ${spring.application.name}
+  consumer:
+    partitioned: true
+    useNativeDecoding: true
+spring.cloud.stream.bindings.events-projecting-outgoing:
+  destination: ${SNAPSHOT_TOPIC_NAME}
+  producer:
+    partition-key-expression: headers['kafka_messageKey']
+    useNativeEncoding: true
+spring.cloud.stream.bindings.events-quarantine-outgoing:
+  destinations: events-quarantine
+  producer:
+    partition-key-expression: headers['kafka_messageKey']
+    useNativeEncoding: true
 spring.cloud.stream.bindings.error.destination: events-errors
 
-spring.cloudb.stream.bindings.events-errors:
+spring.cloud.stream.bindings.events-errors:
   destination: events-errors
 
 
 
 # Специфичные настройки приложения
-kite.eventstore.kafka.localStore.name: regulations-store
+kite.eventstore:
+  kafka.localStore.name: ${STATE_STORE_NAME}
+  mongo:
+    dbAddress: mongodb://${MONGO_SERVER}
+    database.name: ${MONGO_EVENTS_DB}
+    username: ${MONGO_USER}
+    password: ${MONGO_PASSWORD}
+    authenticationDb: ${MONGO_AUTH_DB}
 
 kite.mongo:
   dbAddress: mongodb://${MONGO_SERVER}

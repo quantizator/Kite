@@ -12,6 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 //@RequiredArgsConstructor
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonClassDescription("Заявление на получение услуги заявителем " +
         "(представление для просмотра и редактирования)")

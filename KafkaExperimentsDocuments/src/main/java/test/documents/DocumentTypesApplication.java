@@ -20,12 +20,11 @@ import test.common.service.KafkaEventProcessor;
 @EnableWebFlux
 @EnableDiscoveryClient
 @EnableBinding(KafkaEventProcessor.class)
-@Import({DocumentTypesEventStoreConfiguration.class,
-        MongoConfiguration.class,
+@Import({MongoConfiguration.class,
         DocumentTypesConfiguration.class})
 @EnableCircuitBreaker
-//@ComponentScan(basePackages = {"test.documents", "test.documents.rest", "test.common.rest"})
-@ComponentScan
+@ComponentScan(basePackages = {"test.documents", "test.documents.rest", "test.common.rest"})
+//@ComponentScan
 @Slf4j
 public class DocumentTypesApplication {
 

@@ -1,13 +1,12 @@
 package test.requests.domain.published;
 
-import com.fasterxml.jackson.annotation.JsonClassDescription;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import lombok.EqualsAndHashCode;
+import com.fasterxml.jackson.annotation.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -16,18 +15,38 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 @Setter
-//@RequiredArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
 @JsonClassDescription("Заявление на получение услуги заявителем " +
         "(представление для просмотра истории)")
-public class PublishedApplicationHistory extends PublishedApplication {
+public class PublishedApplicationHistory {
+
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("Номер заявления")
+    private String appicationNumber;
+
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("Состояние заявления")
+    private String applicationStatus;
+
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("Идентификатор заявителя")
+    private String applicantId;
+
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("Идентификатор последнего оператора, изменившего заявление")
+    private String lastOperatorId;
+
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("Дата последнего изменения заявления")
+    @JsonFormat(pattern = "dd-MM-yyyy")
+    private Date lastChangedDate;
 
 
     @JsonPropertyDescription("История работы с заявлением")
     @JsonProperty(required = true)
-    private List<PublishedApplicationHistoryEntry> historyEntries;
+    private List<PublishedApplicationHistoryEntry> historyEntries = new ArrayList<>();
 
-    public PublishedApplicationHistory(String number, PublishedApplicationStatus status, String applicationType, String applicantId, String creatorId, String updaterId) {
-        super(number, status, applicationType, applicantId, creatorId, updaterId);
+    public void addEntry(PublishedApplicationHistoryEntry entry) {
+        historyEntries.add(entry);
     }
 }

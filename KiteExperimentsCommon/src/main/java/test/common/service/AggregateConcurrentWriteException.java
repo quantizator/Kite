@@ -3,7 +3,7 @@ package test.common.service;
 /**
  * @author dmste
  */
-public class AggregateConcurrentWriteException extends Exception {
+public class AggregateConcurrentWriteException extends RuntimeException {
 
 
     public AggregateConcurrentWriteException() {

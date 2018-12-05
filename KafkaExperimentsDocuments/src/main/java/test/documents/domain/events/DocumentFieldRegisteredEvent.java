@@ -11,12 +11,12 @@ import test.documents.domain.DocumentArtifactMetadata;
 import test.documents.domain.DocumentFieldCode;
 import test.documents.domain.DocumentFieldType;
 
-import java.util.List;
+import java.util.Set;
 
 @Setter
 @Getter
 @NoArgsConstructor
-public class DocumentFieldRegisteredEvent extends DomainEvent<DocumentTypeId> {
+public class DocumentFieldRegisteredEvent extends DomainEvent<DocumentTypeId, DocumentsEventType> {
 
     private DocumentFieldCode fieldCode;
 
@@ -25,7 +25,7 @@ public class DocumentFieldRegisteredEvent extends DomainEvent<DocumentTypeId> {
 
     private DocumentArtifactMetadata metadata;
 
-    private List<String> options;
+    private Set<String> options;
 
     public DocumentFieldRegisteredEvent(DocumentFieldCode fieldCode,
                                         DocumentFieldType fieldType,
@@ -41,7 +41,7 @@ public class DocumentFieldRegisteredEvent extends DomainEvent<DocumentTypeId> {
                                         DocumentFieldType fieldType,
                                         boolean required,
                                         DocumentArtifactMetadata metadata,
-                                        List<String> options) {
+                                        Set<String> options) {
         this(fieldCode, fieldType, required, metadata);
         this.options = options;
     }
@@ -51,7 +51,7 @@ public class DocumentFieldRegisteredEvent extends DomainEvent<DocumentTypeId> {
                                         DocumentFieldType fieldType,
                                         boolean required,
                                         DocumentArtifactMetadata metadata,
-                                        List<String> options) {
+                                        Set<String> options) {
         super(date, uuid, identifier, version);
         this.fieldCode = fieldCode;
         this.fieldType = fieldType;
@@ -96,7 +96,7 @@ public class DocumentFieldRegisteredEvent extends DomainEvent<DocumentTypeId> {
         return required;
     }
 
-    public List<String> options() {
+    public Set<String> options() {
         return options;
     }
 
@@ -106,8 +106,8 @@ public class DocumentFieldRegisteredEvent extends DomainEvent<DocumentTypeId> {
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.DOCUMENT_FIELD_REGISTERED;
+    public DocumentsEventType eventType() {
+        return DocumentsEventType.DOCUMENT_FIELD_REGISTERED;
     }
 
 }

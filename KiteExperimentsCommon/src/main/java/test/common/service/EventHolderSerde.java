@@ -11,7 +11,7 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 public class EventHolderSerde extends JsonSerde<AggregateEventsHolder> {
 
     public EventHolderSerde() {
-        this(KafkaLocalStoreObjectMapperFactory.createObjectMapper());
+        this(ObjectMapperFactory.createKafkaStateStoreObjectMapper());
     }
 
 

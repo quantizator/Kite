@@ -17,7 +17,7 @@ import java.util.Map;
 @Setter
 @Getter
 @NoArgsConstructor
-public class DocumentFieldsFilledEvent extends DomainEvent<DocumentId> {
+public class DocumentFieldsFilledEvent extends DomainEvent<DocumentId, DocumentsEventType> {
 
     private Map<DocumentFieldCode, String> documentFields;
 
@@ -45,7 +45,7 @@ public class DocumentFieldsFilledEvent extends DomainEvent<DocumentId> {
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.DOCUMENT_FIELDS_FILLED;
+    public DocumentsEventType eventType() {
+        return DocumentsEventType.DOCUMENT_FIELDS_FILLED;
     }
 }

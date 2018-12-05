@@ -8,7 +8,7 @@ import java.text.DateFormat;
 import java.text.Format;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.List;
+import java.util.Set;
 
 public class DocumentFieldDefinition extends DomainEntity<DocumentType> {
 
@@ -36,7 +36,7 @@ public class DocumentFieldDefinition extends DomainEntity<DocumentType> {
     DocumentFieldDefinition(DocumentType type, DocumentFieldCode fieldCode,
                             boolean required,
                             DocumentArtifactMetadata metadata,
-                            List<String> options) {
+                            Set<String> options) {
         this(type, fieldCode, DocumentFieldType.OPTIONS, required, metadata);
         this.options = new DocumentFieldOptions(options);
     }

@@ -3,11 +3,11 @@ package test.requests.domain.events;
 import lombok.NoArgsConstructor;
 import test.common.domain.AggregateCreatedEvent;
 import test.common.domain.AggregateNames;
-import test.requests.domain.EventTypes;
+import test.requests.domain.RequestsEventType;
 import test.requests.domain.INN;
 
 @NoArgsConstructor
-public class OrganizationRegisteredEvent extends AggregateCreatedEvent<INN> {
+public class OrganizationRegisteredEvent extends AggregateCreatedEvent<INN, RequestsEventType> {
 
     private String shortName;
     private String longName;
@@ -38,8 +38,8 @@ public class OrganizationRegisteredEvent extends AggregateCreatedEvent<INN> {
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.ORGANIZATION_REGISTERED;
+    public RequestsEventType eventType() {
+        return RequestsEventType.ORGANIZATION_REGISTERED;
     }
 
 

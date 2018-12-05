@@ -1,5 +1,6 @@
 package test.regulations.domain.events;
 
+import lombok.NoArgsConstructor;
 import test.common.domain.AggregateNames;
 import test.common.domain.DocumentTypeCode;
 import test.common.domain.DomainEvent;
@@ -12,7 +13,8 @@ import java.util.List;
 /**
  * @author dmste
  */
-public class RegulationConditionOptionAddedEvent extends DomainEvent<RegulationIdentifier> {
+@NoArgsConstructor
+public class RegulationConditionOptionAddedEvent extends DomainEvent<RegulationIdentifier, RegulationsEventType> {
 
     private ConditionCode conditionCode;
     private ConditionOptionCode code;
@@ -95,8 +97,8 @@ public class RegulationConditionOptionAddedEvent extends DomainEvent<RegulationI
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.CONDITION_OPTION_ADDED;
+    public RegulationsEventType eventType() {
+        return RegulationsEventType.CONDITION_OPTION_ADDED;
     }
 
 

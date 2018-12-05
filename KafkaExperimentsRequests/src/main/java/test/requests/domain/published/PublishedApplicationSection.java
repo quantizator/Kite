@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -12,6 +14,7 @@ import java.util.List;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonClassDescription("Секция заявления")
+@Setter @Getter
 public class PublishedApplicationSection {
 
     @JsonPropertyDescription("Метаданные секции")

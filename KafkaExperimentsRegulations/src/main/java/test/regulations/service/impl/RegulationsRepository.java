@@ -22,7 +22,7 @@ public class RegulationsRepository extends MementoBasedAggregateRepository<Regul
         filterMap.put(RegulationMementoBuilder.SERVICEID_FIELD, serviceId.id());
         filterMap.put(RegulationMementoBuilder.STATUS_FIELD, Regulation.Status.ACTIVE.name());
 
-        return checkAndReturnUnique(serviceId.toString(), getByFilter(filterMap));
+        return checkAndReturnUnique(serviceId.toString(), getByFilter(filterMap), false);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package test.requests;
 
+import org.jooq.SQLDialect;
 import org.jooq.impl.DataSourceConnectionProvider;
 import org.jooq.impl.DefaultConfiguration;
 import org.jooq.impl.DefaultDSLContext;
@@ -42,6 +43,7 @@ public class PersistenceConfiguration {
     public DefaultConfiguration configuration() {
         DefaultConfiguration jooqConfiguration = new DefaultConfiguration();
         jooqConfiguration.set(connectionProvider());
+        jooqConfiguration.set(SQLDialect.POSTGRES);
         jooqConfiguration
                 .set(new DefaultExecuteListenerProvider(exceptionTransformer()));
 

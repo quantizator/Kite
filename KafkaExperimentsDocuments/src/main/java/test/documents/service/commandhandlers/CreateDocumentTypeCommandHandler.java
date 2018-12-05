@@ -33,19 +33,14 @@ public class CreateDocumentTypeCommandHandler implements NonReturningCommandHand
     @Override
     public Mono<Void> handle(CreateDocumentTypeCommand command) {
         return checkCommandArguments(command)
-                .then(Mono.create(sink -> {
-                    // Шаг 1: Генерируем идентификатор
-                    DocumentTypeId documentTypeId =
-                            identifierGenerator.generate(AggregateNames.DOCUMENT_TYPES);
-                    sink.success(documentTypeId);
-                }))
-                .<DocumentType>handle((id, sink) -> {
-                    // Шаг 2: Создаем агрегат
-                    sink.next(createDocumentTypeWithId((DocumentTypeId) id, command));
-                    sink.complete();
-                    // Шаг 3: Сохраняем агрегат в репозиторий
-                }).flatMap(documentType -> documentTypesRepository.save(documentType).doOnNext(success -> {
-                    if (success) {
+                .then(retrieveExisting(command))
+                .map(existing -> {
+                    throw new RuntimeException("Existing document type found with ID ");
+                })
+                .defaultIfEmpty(identifierGenerator.generate(AggregateNames.DOCUMENT_TYPES))
+                .map(id -> createDocumentTypeWithId((DocumentTypeId) id, command))
+                .flatMap(documentType -> documentTypesRepository.save(documentType).doOnSuccess(success -> {
+                    if (!success) {
                         new RuntimeException(MessageFormat.format(
                                 "Storing of domain " +
                                         "aggregate [{0}] with ID [{1}] did not " +
@@ -90,5 +85,10 @@ public class CreateDocumentTypeCommandHandler implements NonReturningCommandHand
         }
         AttachmentPolicy.valueOf(command.getAttachmentPolicy());
         return Mono.empty();
+    }
+
+    private Mono<DocumentType> retrieveExisting(CreateDocumentTypeCommand command) {
+        return documentTypesRepository.getByCode(new DocumentTypeCode(command.getCode(),
+                command.getClassifierCode()));
     }
 }

@@ -9,10 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.stream.binder.kafka.streams.InteractiveQueryService;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
-import java.text.MessageFormat;
 
 /**
  * Сервис запроса хранителя событий агрегата из хранилища состояний
@@ -23,35 +20,41 @@ import java.text.MessageFormat;
 @EnableConfigurationProperties(KafkaStoreConfigurationProperties.class)
 public class EventsHolderQueryServiceKafka {
 
-    @Autowired
     private InteractiveQueryService queryService;
 
     @Autowired
-    private WebClient.Builder builder;
+    private IEventsHolderRemoteAccessor remoteAccessor;
 
+    @Autowired
+    private KafkaStoreConfigurationProperties configProperties;
 
     /**
-     * Запрашивает хранитель событий агрегата из хранилища состояний
-     * Kafka Streams
+     * Запрашивает хранитель событий агрегата, обрабатываемый KafkaStreams.
      *
      * @param aggregateId идентификатор агрегата
-     * @param storeName название хранилища состояний
+     * @param aggregateName
      * @return хранитель событий агрегата
      */
-    public Mono<AggregateEventsHolder> getEventsHolderForAggregate(String aggregateId, String storeName) {
-
-        HostInfo aggregateHostInfo = queryService.getHostInfo(storeName, aggregateId, Serdes.String().serializer());
-
-        boolean isFoundLocally = queryService.getCurrentHostInfo().equals(aggregateHostInfo);
-
-        return isFoundLocally ? retrieveFromLocalStateStore(storeName, aggregateId)
-                : retrieveFromRemoteStateStore(aggregateHostInfo, storeName, aggregateId);
+    public Mono<AggregateEventsHolder> getEventsHolderForAggregate(String aggregateId, String aggregateName) {
+        return isFoundInStateStore(aggregateId)
+                ? retrieveFromLocalStateStore(aggregateId)
+                : retrieveFromRemote(aggregateName, aggregateId);
     }
 
-    private Mono<AggregateEventsHolder> retrieveFromLocalStateStore(String storeName, String aggregateId) {
+    private boolean isFoundInStateStore(String aggregateId) {
+        String stateStoreName = configProperties.getLocalStore().getName();
+        HostInfo aggregateHostInfo = queryService.getHostInfo(stateStoreName, aggregateId, Serdes.String().serializer());
+
+        return queryService.getCurrentHostInfo().equals(aggregateHostInfo);
+    }
+
+    private Mono<AggregateEventsHolder> retrieveFromLocalStateStore(String aggregateId) {
+        String storeName = configProperties.getLocalStore().getName();
+
         ReadOnlyKeyValueStore<String, AggregateEventsHolder> localStore =
                 queryService.getQueryableStore(storeName,
                         QueryableStoreTypes.keyValueStore());
+
         if (localStore == null) {
             return Mono.empty();
         }
@@ -60,15 +63,16 @@ public class EventsHolderQueryServiceKafka {
         return Mono.justOrEmpty(holder);
     }
 
-    private Mono<AggregateEventsHolder> retrieveFromRemoteStateStore(HostInfo aggregateHostInfo, String storeName, String aggregateId) {
+    private Mono<AggregateEventsHolder> retrieveFromRemote(String aggregateName, String aggregateId) {
+        return remoteAccessor.getAggregateEventsHolder(aggregateName, aggregateId);
+    }
 
-        String url = MessageFormat.format("http://{0}:{1}{2}", aggregateHostInfo.host(),
-                aggregateHostInfo.port(), EventStoreConstants.KAFKA_REMOTE_STATE_STORE_PATH);
-
-        log.debug("Querying aggregate [{}] event stream from location [{}]", aggregateId, url);
-
-        return builder.baseUrl(url).build().get()
-                .uri("/{storeName}/{aggregateId}", storeName, aggregateId)
-                .retrieve().bodyToMono(AggregateEventsHolder.class);
+    @Autowired
+    public void setQueryService(InteractiveQueryService queryService) {
+        HostInfo hostInfo = queryService.getCurrentHostInfo();
+        if (hostInfo == null) {
+            throw new IllegalStateException("Configuration invalid! HostInfo for Kafka Interactive Query Service is not set!");
+        }
+        this.queryService = queryService;
     }
 }

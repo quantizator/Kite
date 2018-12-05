@@ -118,7 +118,7 @@ public class Individual extends Applicant<SNILS> {
     }
 
     @Override
-    public AggregateCreatedEvent<SNILS> createInitialEvent() {
+    public IndividualRegisteredEvent createInitialEvent() {
         return new IndividualRegisteredEvent(firstName, lastName, patronymic);
     }
 

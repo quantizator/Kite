@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.state.KeyValueStore;
@@ -16,11 +15,12 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.SynchronousSink;
 import test.common.domain.*;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -49,11 +49,12 @@ public class EventStoreKafka implements IEventStore {
     @Autowired
     private EventsHolderQueryServiceKafka eventsHolderQueryService;
 
+
     @Override
     public Mono<EventStream> loadFullEventStream(String aggregateName,
                                                  AggregateIdentifier aggregateId) {
         Mono<AggregateEventsHolder> eventsHolder =
-                getFromLocalStore(aggregateId);
+                getEventsHolder(aggregateName, aggregateId);
         return buildEventStream(aggregateName, aggregateId,
                 eventsHolder);
     }
@@ -66,7 +67,7 @@ public class EventStoreKafka implements IEventStore {
     @Override
     public Mono<DomainEvent> getInitialEvent(String aggregateName, AggregateIdentifier identifier) {
         Mono<AggregateEventsHolder> eventsHolder =
-                getFromLocalStore(identifier);
+                getEventsHolder(aggregateName, identifier);
         return eventsHolder.map(h -> h.getInitialEvent());
 
     }
@@ -74,11 +75,13 @@ public class EventStoreKafka implements IEventStore {
     @Override
     public Mono<LastVersionHolder> getLastVersion(String aggregateName, AggregateIdentifier identifier) {
         Mono<AggregateEventsHolder> eventsHolder =
-                getFromLocalStore(identifier);
-        return eventsHolder.map(h -> {
-            AggregateVersion lastVersion = new AggregateVersion(h.getVersion());
-            return new LastVersionHolder(lastVersion, h.isShadow());
-        });
+                getEventsHolder(aggregateName, identifier);
+        return eventsHolder.map(this::buildLastVersionHolder);
+    }
+
+    private LastVersionHolder buildLastVersionHolder(AggregateEventsHolder eventsHolder) {
+        AggregateVersion lastVersion = new AggregateVersion(eventsHolder.getVersion());
+        return new LastVersionHolder(lastVersion, eventsHolder.isShadow());
     }
 
     @Override
@@ -90,9 +93,7 @@ public class EventStoreKafka implements IEventStore {
         Mono<Boolean> result = lastVersion
                 .switchIfEmpty(Mono.just(LastVersionHolder.absent()))
                 .handle((holder, sink) -> {
-                    if (!canAppendToStream(event, holder, sink)) {
-                        return;
-                    }
+                    checkHandleDomainEvent(event, holder);
                     Message<SpecificRecord> eventMessage =
                             buildMessage(aggregateName,
                                     aggregateId,
@@ -106,28 +107,29 @@ public class EventStoreKafka implements IEventStore {
         return result.then();
     }
 
-    private boolean  canAppendToStream(DomainEvent event, LastVersionHolder holder, SynchronousSink sink) {
+    /**
+     *
+     * @param event
+     * @param holder
+     * @throws AggregateConcurrentWriteException
+     */
+    private void checkHandleDomainEvent(DomainEvent event, LastVersionHolder holder) {
         AggregateVersion lastVersion = holder.lastVersion();
         if (conversionService.isInitialDomainEvent(event)) {
             if (holder.isShadow()) {
                 log.info("Attempting to restore aggregate [{}] from shadow state.", event.aggregateIdentifier());
             } else if (lastVersion.isGreater(AggregateVersion.absent())) {
-                sink.error(new AggregateConcurrentWriteException(
-                        "Unable to insert initial event for already existing aggregate"));
-                return false;
+                throw new AggregateConcurrentWriteException(
+                        "Unable to insert initial event for already existing aggregate");
             }
         } else if (holder.isShadow()) {
-            sink.error(new AggregateDeletedException(event.aggregateName(),
-                    event.aggregateIdentifier()));
-            return false;
+            throw new AggregateDeletedException(event.aggregateName(),
+                    event.aggregateIdentifier());
         }
 
         if (lastVersion.isGreater(event.version())) {
-            sink.error(new AggregateConcurrentWriteException());
-            return false;
+            throw new AggregateConcurrentWriteException();
         }
-
-        return true;
     }
 
     private Message<SpecificRecord> buildMessage(String aggregateName,
@@ -155,41 +157,83 @@ public class EventStoreKafka implements IEventStore {
     }
 
     @StreamListener(KafkaEventProcessor.INCOMING)
-    public void process(KStream<String,
+    @SendTo(KafkaEventProcessor.PROJECTING_OUTGOING)
+    public KStream<String, AggregateEventsHolder> process(KStream<String,
             SpecificRecord> recordStream) {
-        // Шаг 1: Обрабатываем событие и следуем дальше
-        KStream<String, SpecificRecord> recordStreamProcessed =
-                recordStream
-                        .map((id, record) -> {
-                            processEvent(id, record);
-                            return new KeyValue<>(id, record);
-                        });
+        KStream<String, SpecificRecord> eventStream = recordStream
+                .filter((id, record) -> conversionService.isEventRecord(record));
 
-        if (supportsLocalStore()) {
-            // Шаг 2: отбираем события своего домена, группируем и помещаем в
-            // локальное хранилище
-            recordStreamProcessed.filter((id, record) -> conversionService.isDomainEventRecord(record))
-                    .groupByKey()
-                    .aggregate(AggregateEventsHolder::new,
-                            (identifier,
-                             record, aggregate) -> {
-                                try {
-                                    return updateEventsHolder(record, aggregate);
-                                } catch (EventProcessorException ex) {
-                                    sendToError(record, ex);
-                                    return aggregate;
-                                }
-                            },
-                            getLocalStore());
+        if (!supportsLocalStore()) {
+            return eventStream.flatMap((identifier, eventRecord) -> {
+                try {
+                    if (checkDuplication(eventRecord)) {
+                        processEvent(identifier, eventRecord);
+                    }
+                } catch (EventProcessorException ex) {
+                    sendToQuarantine(identifier, eventRecord, ex);
+                }
+                return Collections.emptyList();
+            });
         }
+
+        return eventStream
+                .groupByKey()
+                .aggregate(AggregateEventsHolder::new,
+                        (identifier,
+                         eventRecord, aggregate) -> {
+                            if (!checkDuplication(eventRecord, aggregate)) {
+                                return aggregate;
+                            }
+                            AggregateEventsHolder holder = aggregate;
+                            try {
+
+                                if (conversionService.isDomainEventRecord(eventRecord)) {
+                                    holder =  updateEventsHolder(eventRecord, aggregate);
+                                }
+                                processEvent(identifier, eventRecord);
+                            } catch (EventProcessorException ex) {
+                                sendToQuarantine(identifier, eventRecord, ex);
+                            }
+                            return holder;
+                        },
+                        getLocalStore())
+                // Шаг 3: отправляем хранитель агрегата в поток PROJECTING_OUTGOING
+                .toStream();
+
 
     }
 
-    private void sendToError(SpecificRecord eventRecord, EventProcessorException ex) {
-        // TODO: implement DLQ
-//        processorBinding.errorOutgoing().send(MessageBuilder.withPayload(eventRecord)
-//                .setHeader(KafkaHeaders.DLT_EXCEPTION_MESSAGE, ex.getMessage())
-//                .setHeader(KafkaHeaders.DLT_EXCEPTION_STACKTRACE, ex.getStackTrace()).build());
+    private boolean checkDuplication(SpecificRecord record) {
+        return checkDuplication(record, null);
+    }
+
+    private boolean checkDuplication(SpecificRecord record, AggregateEventsHolder eventsHolder) {
+        if (!conversionService.isDomainEventRecord(record)) {
+            // currently skip all foreign events
+            return true;
+        }
+
+        if (eventsHolder == null) {
+            return true;
+        }
+
+        try {
+            DomainEvent domainEvent = conversionService.fromAvroRecord(record);
+            checkHandleDomainEvent(domainEvent, buildLastVersionHolder(eventsHolder));
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+
+    private void sendToQuarantine(String key, SpecificRecord eventRecord,
+                                  EventProcessorException ex) {
+        processorBinding.quarantineOutgoing().send(MessageBuilder.withPayload(eventRecord)
+                .setHeader(KafkaHeaders.MESSAGE_KEY, key)
+//                .setHeader(PROCESSING_PHASE_HEADER, phase.name())
+                .setHeader(KafkaHeaders.DLT_EXCEPTION_MESSAGE, ex.getMessage())
+                .setHeader(KafkaHeaders.DLT_EXCEPTION_STACKTRACE, ex.getStackTrace()).build());
     }
 
     /**
@@ -245,9 +289,9 @@ public class EventStoreKafka implements IEventStore {
                 .withValueSerde(new EventHolderSerde());
     }
 
-    private Mono<AggregateEventsHolder> getFromLocalStore(AggregateIdentifier aggregateId) {
+    private Mono<AggregateEventsHolder> getEventsHolder(String aggregateName, AggregateIdentifier aggregateId) {
         return eventsHolderQueryService.getEventsHolderForAggregate(aggregateId.id(),
-                configProperties.getLocalStore().getName());
+                aggregateName);
     }
 
     /**
@@ -257,7 +301,7 @@ public class EventStoreKafka implements IEventStore {
      * @param aggregateId идентификатор агрегата предметной области
      * @param eventRecord запись события предметной области
      */
-    protected void processEvent(String aggregateId, SpecificRecord eventRecord) {
+    protected void processEvent(String aggregateId, SpecificRecord eventRecord) throws EventProcessorException {
         try {
             Event event =
                     conversionService.fromAvroRecord(eventRecord);
@@ -266,11 +310,9 @@ public class EventStoreKafka implements IEventStore {
             eventPublisher.publishEvent(event);
         } catch (EventConversionException ex) {
             log.error("Conversion of avro event record for aggregate [{}] failed. Skipping event processing", aggregateId, ex);
+        } catch (Exception ex) {
+            throw new EventProcessorException(ex);
         }
-//         запись событий в репозиторий
-//        eventRepository.backup(event);
-//        // прогоняем через цепочку слушателей
-//        ListUtils.emptyIfNull(streamListeners).forEach(l -> l.onEvent(event));
     }
 
 
@@ -284,8 +326,6 @@ public class EventStoreKafka implements IEventStore {
     }
 
     private List<DomainEvent> retrieveDomainEventsFromHolder(AggregateEventsHolder holder) {
-//        return holder.getEvents().stream()
-//                .map(r -> (DomainEvent) conversionService.fromAvroRecord(r)).collect(Collectors.toList());
         return holder.getEvents();
     }
 

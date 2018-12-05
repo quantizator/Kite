@@ -1,5 +1,6 @@
 package test.regulations.domain.events;
 
+import lombok.NoArgsConstructor;
 import test.common.domain.AggregateNames;
 import test.common.domain.AggregateVersion;
 import test.common.domain.DomainEvent;
@@ -10,22 +11,23 @@ import test.regulations.domain.RegulationIdentifier;
 /**
  *
  */
-public class RegulationConditionAdded extends DomainEvent<RegulationIdentifier> {
+@NoArgsConstructor
+public class RegulationConditionAddedEvent extends DomainEvent<RegulationIdentifier, RegulationsEventType> {
 
     private ConditionCode conditionCode;
     private ConditionDefinition definition;
     private int order;
 
 
-    public RegulationConditionAdded(ConditionCode conditionCode, ConditionDefinition definition, int order) {
+    public RegulationConditionAddedEvent(ConditionCode conditionCode, ConditionDefinition definition, int order) {
         this.conditionCode = conditionCode;
         this.definition = definition;
         this.order = order;
     }
 
-    public RegulationConditionAdded(long date, String uuid, RegulationIdentifier identifier,
-                                    AggregateVersion version, ConditionCode conditionCode,
-                                    ConditionDefinition definition, int order) {
+    public RegulationConditionAddedEvent(long date, String uuid, RegulationIdentifier identifier,
+                                         AggregateVersion version, ConditionCode conditionCode,
+                                         ConditionDefinition definition, int order) {
         super(date, uuid, identifier, version);
         this.conditionCode = conditionCode;
         this.definition = definition;
@@ -50,8 +52,8 @@ public class RegulationConditionAdded extends DomainEvent<RegulationIdentifier> 
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.CONDITION_ADDED;
+    public RegulationsEventType eventType() {
+        return RegulationsEventType.CONDITION_ADDED;
     }
 
 

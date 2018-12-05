@@ -3,10 +3,11 @@ package test.requests.domain.events;
 import test.common.domain.*;
 import test.requests.domain.ApplicationNumber;
 import test.requests.domain.DocumentFieldCode;
+import test.requests.domain.RequestsEventType;
 
 import java.util.Map;
 
-public class DocumentRejectedEvent extends DomainEvent<ApplicationNumber> {
+public class DocumentRejectedEvent extends DomainEvent<ApplicationNumber, RequestsEventType> {
 
     private DocumentId documentId;
     private DocumentTypeId documentTypeId;
@@ -37,8 +38,8 @@ public class DocumentRejectedEvent extends DomainEvent<ApplicationNumber> {
     }
 
     @Override
-    public String eventType() {
-        return null;
+    public RequestsEventType eventType() {
+        return RequestsEventType.DOCUMENT_REJECTED;
     }
 
     public DocumentTypeId documentTypeId() {

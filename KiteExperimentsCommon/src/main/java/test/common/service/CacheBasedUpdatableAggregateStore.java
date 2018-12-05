@@ -20,7 +20,7 @@ public class CacheBasedUpdatableAggregateStore<A extends DomainAggregate,
         I extends AggregateIdentifier> extends CacheBasedAggregateStore<A, I> implements EventBasedAggregateUpdater<A> {
 
     @EventListener
-    public <E extends DomainEvent<I>> void handle(E event) {
+    public <E extends DomainEvent<I, ?>> void handle(E event) {
         I identifier = event.aggregateIdentifier();
         A aggregate = read(identifier).block();
         if (aggregate == null) {

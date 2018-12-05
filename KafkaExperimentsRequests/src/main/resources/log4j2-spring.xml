@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="info" name="spring-boot-kafka-log" monitorInterval="30">
     <Appenders>
-        <Kafka name="Kafka" topic="logging">
+        <Kafka name="Kafka" topic="logging-new">
             <!--<PatternLayout pattern="%date %message"/>-->
             <JsonLayout/>
             <Property name="bootstrap.servers">${env:KAFKA_BOOTSTRAP_SERVERS}</Property>
@@ -20,7 +20,7 @@
             <AppenderRef ref="Kafka"/>
             <AppenderRef ref="stdout"/>
         </Root>
-        <Logger name="org.apache.kafka" level="WARN">
+        <Logger name="org.apache.kafka" level="ERROR">
             <AppenderRef ref="stdout"/>
         </Logger>
         <Logger name="test.documents" level="DEBUG" >

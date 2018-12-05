@@ -31,7 +31,7 @@ public class DocumentTypesRepository extends MementoBasedAggregateRepository<Doc
                     code.classifierCode());
         }
 
-        return checkAndReturnUnique(code.toString(), getByFilter(filterMap));
+        return checkAndReturnUnique(code.toString(), getByFilter(filterMap), false);
     }
 
     @Override

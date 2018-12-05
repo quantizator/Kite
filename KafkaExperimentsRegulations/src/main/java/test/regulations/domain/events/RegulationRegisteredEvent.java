@@ -1,5 +1,6 @@
 package test.regulations.domain.events;
 
+import lombok.NoArgsConstructor;
 import test.common.domain.AggregateCreatedEvent;
 import test.common.domain.AggregateNames;
 import test.common.domain.ApplicantType;
@@ -9,7 +10,8 @@ import test.regulations.domain.ServiceId;
 
 import java.util.List;
 
-public class RegulationRegisteredEvent extends AggregateCreatedEvent<RegulationIdentifier> {
+@NoArgsConstructor
+public class RegulationRegisteredEvent extends AggregateCreatedEvent<RegulationIdentifier, RegulationsEventType> {
 
     private ServiceId serviceId;
     private List<ApplicantType> allowedApplicantTypes;
@@ -45,7 +47,7 @@ public class RegulationRegisteredEvent extends AggregateCreatedEvent<RegulationI
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.REGULATION_REGISTERED;
+    public RegulationsEventType eventType() {
+        return RegulationsEventType.REGULATION_REGISTERED;
     }
 }

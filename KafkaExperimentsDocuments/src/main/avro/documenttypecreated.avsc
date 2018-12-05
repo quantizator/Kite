@@ -9,6 +9,7 @@
         {"name": "code", "type": "string"},
         {"name": "classifierCode", "type": ["string", "null"]},
         {"name": "name", "type": "string"},
+        {"name": "usageType", "type": "string", "default": "EXTERNAL"},
         {"name": "description", "type": ["string", "null"]},
         {"name": "attachmentPolicy", "type": "string"}
     ]

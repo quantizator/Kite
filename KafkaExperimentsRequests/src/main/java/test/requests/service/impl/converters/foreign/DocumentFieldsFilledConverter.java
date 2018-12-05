@@ -1,5 +1,6 @@
 package test.requests.service.impl.converters.foreign;
 
+import org.springframework.stereotype.Component;
 import test.common.service.ForeignEventConverter;
 import test.documents.domain.events.avro.DocumentField;
 import test.documents.domain.events.avro.DocumentFieldsFilled;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 /**
  * @author dmste
  */
+@Component
 public class DocumentFieldsFilledConverter implements ForeignEventConverter<DocumentFieldsFilledEvent, DocumentFieldsFilled> {
 
     @Override

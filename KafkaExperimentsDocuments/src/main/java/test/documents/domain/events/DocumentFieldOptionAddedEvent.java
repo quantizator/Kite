@@ -14,7 +14,7 @@ import test.common.domain.DomainEvent;
 @Setter
 @Getter
 @NoArgsConstructor
-public class DocumentFieldOptionAddedEvent extends DomainEvent<DocumentTypeId> {
+public class DocumentFieldOptionAddedEvent extends DomainEvent<DocumentTypeId, DocumentsEventType> {
 
     private String fieldCode;
 
@@ -82,7 +82,7 @@ public class DocumentFieldOptionAddedEvent extends DomainEvent<DocumentTypeId> {
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.DOCUMENT_FIELD_OPTION_ADDED;
+    public DocumentsEventType eventType() {
+        return DocumentsEventType.DOCUMENT_FIELD_OPTION_ADDED;
     }
 }

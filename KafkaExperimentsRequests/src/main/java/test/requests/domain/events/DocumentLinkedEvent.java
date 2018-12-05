@@ -4,11 +4,11 @@ import test.common.domain.*;
 import test.requests.domain.ApplicantDocumentType;
 import test.requests.domain.ApplicationNumber;
 import test.requests.domain.DocumentFieldCode;
-import test.requests.domain.EventTypes;
+import test.requests.domain.RequestsEventType;
 
 import java.util.Map;
 
-public class DocumentLinkedEvent extends DomainEvent<ApplicationNumber> {
+public class DocumentLinkedEvent extends DomainEvent<ApplicationNumber, RequestsEventType> {
 
     private DocumentId documentId;
     private String name;
@@ -104,8 +104,8 @@ public class DocumentLinkedEvent extends DomainEvent<ApplicationNumber> {
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.DOCUMENT_LINKED;
+    public RequestsEventType eventType() {
+        return RequestsEventType.DOCUMENT_LINKED;
     }
 
 }

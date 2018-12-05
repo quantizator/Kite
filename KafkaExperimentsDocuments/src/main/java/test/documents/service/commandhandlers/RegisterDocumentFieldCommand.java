@@ -9,7 +9,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import test.common.domain.published.DomainCommand;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * @author dmste
@@ -46,7 +46,7 @@ public class RegisterDocumentFieldCommand implements DomainCommand {
     @JsonPropertyDescription("Тип данных поля документа")
     private String dataType;
 
-    private List<String> options;
+    private Set<String> options;
 
     @JsonPropertyDescription("Является ли поле обязательным")
     private boolean required = false;

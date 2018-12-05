@@ -9,6 +9,7 @@ import test.requests.domain.IPublishedApplicantsRepository;
 import test.requests.domain.published.PublishedIndividual;
 import test.requests.domain.published.PublishedOrganization;
 import test.requests.service.impl.commandhandlers.RegisterIndividualCommand;
+import test.requests.service.impl.commandhandlers.SupplyPassportDataCommand;
 
 @RestController
 @RequestMapping("/applicants")
@@ -33,5 +34,10 @@ public class ApplicantsController {
     @PutMapping("/individuals")
     public Mono<Void> registerIndividual(@RequestBody RegisterIndividualCommand registerCommand) {
         return commandExecutor.execute(registerCommand);
+    }
+
+    @PostMapping("/individuals/passportData")
+    public Mono<Void> supplyPassportData(@RequestBody SupplyPassportDataCommand passportDataCommand) {
+        return commandExecutor.execute(passportDataCommand);
     }
 }

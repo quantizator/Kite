@@ -4,16 +4,19 @@ import org.apache.commons.lang3.StringUtils;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.TableField;
+import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import test.requests.domain.IPublishedApplicationsRepository;
 import test.requests.domain.published.PublishedApplication;
 import test.requests.domain.published.PublishedApplicationStatus;
+import test.requests.domain.published.PublishedApplicationView;
 import test.requests.persistence.db.tables.records.ApplicationsRecord;
 
 import static org.jooq.impl.DSL.asterisk;
-import static test.requests.persistence.db.Tables.APPLICATIONS_;
+import static test.requests.persistence.db.Tables.*;
 
 /**
  * @author dmste
@@ -64,5 +67,18 @@ public class PublishedApplicationsJooqRepository implements IPublishedApplicatio
             return new PublishedApplication(number, new PublishedApplicationStatus(status, status), applicationType,
                     applicantId, creatorId, updaterId);
         });
+    }
+
+    @Override
+    public Mono<PublishedApplicationView> getPublishedApplicationView(String applicationNumber) {
+        PublishedApplicationViewRecordMapper mapper = new PublishedApplicationViewRecordMapper();
+         return Flux.fromStream(dslContext.select(DSL.asterisk()).from(APPLICATIONS_)
+                .innerJoin(APPLICATION_SECTIONS).on(APPLICATION_SECTIONS.APPLICATION_ID.eq(APPLICATIONS_.ID))
+                .innerJoin(APPLICATION_DOCUMENT_FIELDS).on(APPLICATION_DOCUMENT_FIELDS.SECTION_ID.eq(APPLICATION_SECTIONS.ID))
+                .innerJoin(INDIVIDUALS).on(INDIVIDUALS.ID.eq(APPLICATIONS_.APPLICANT_ID))
+                 .where(APPLICATIONS_.NUMBER.eq(applicationNumber))
+                 .fetchStream())
+                 .singleOrEmpty()
+                 .map(r -> mapper.map(r));
     }
 }

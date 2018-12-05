@@ -4,10 +4,10 @@ import test.common.domain.AggregateNames;
 import test.common.domain.AggregateVersion;
 import test.common.domain.DomainEvent;
 import test.requests.domain.ApplicationNumber;
-import test.requests.domain.EventTypes;
+import test.requests.domain.RequestsEventType;
 import test.requests.domain.Status;
 
-public class ApplicationStatusChangedEvent extends DomainEvent<ApplicationNumber> {
+public class ApplicationStatusChangedEvent extends DomainEvent<ApplicationNumber, RequestsEventType> {
 
     private Status newStatus;
 
@@ -28,8 +28,8 @@ public class ApplicationStatusChangedEvent extends DomainEvent<ApplicationNumber
     }
 
     @Override
-    public String eventType() {
-        return EventTypes.STATUS_CHANGED;
+    public RequestsEventType eventType() {
+        return RequestsEventType.STATUS_CHANGED;
     }
 
 }

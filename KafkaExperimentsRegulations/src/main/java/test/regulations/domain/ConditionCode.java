@@ -1,8 +1,10 @@
 package test.regulations.domain;
 
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @EqualsAndHashCode
+@NoArgsConstructor
 public class ConditionCode {
     private String code;
 

@@ -1,6 +1,7 @@
 package test.common.configuration;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.schema.client.ConfluentSchemaRegistryClient;
 import org.springframework.cloud.stream.schema.client.SchemaRegistryClient;
@@ -27,7 +28,20 @@ public class EventStoreConfiguration {
     }
 
     @Bean
-    public EventsHolderQueryServiceKafka holderQueryServiceKafka() { return new EventsHolderQueryServiceKafka(); }
+    public EventsHolderQueryServiceKafka holderQueryServiceKafka() {
+        return new EventsHolderQueryServiceKafka();
+    }
+
+    @Bean("eventStoreMongoConfiguration")
+    @ConfigurationProperties(prefix = "kite.eventstore.mongo")
+    public MongoConfiguration eventStoreMongoConfig() {
+        return new MongoConfiguration();
+    }
+
+    @Bean
+    public IEventsHolderRemoteAccessor eventsHolderRemoteAccessor() {
+        return new EventsHolderMongoService();
+    }
 
     @Bean
     public KafkaStoreConfigurationProperties kafkaConfig() {

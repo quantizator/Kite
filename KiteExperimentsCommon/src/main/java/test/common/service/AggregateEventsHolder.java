@@ -28,4 +28,8 @@ public class AggregateEventsHolder {
     public void addEvent(DomainEvent event) {
         events.add(event);
     }
+
+    public String aggregateName() {
+        return initialEvent.aggregateName();
+    }
 }
