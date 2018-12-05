@@ -1,0 +1,4 @@
+# Specify location for json key used to access service registry
+GCE_KEY_LOCATION=
+# Specify ID of Google Cloud Engine Project
+GCE_PROJECT_ID=kite-221910

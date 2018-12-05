@@ -15,7 +15,7 @@ buildscript {
 
 plugins {
     id 'io.franzbecker.gradle-lombok' version '1.14'
-    id "com.bmuschko.docker-spring-boot-application" version "4.0.5"
+    id "com.bmuschko.docker-spring-boot-application" version "4.1.0"
 }
 
 configurations {
@@ -45,7 +45,7 @@ docker {
     registryCredentials {
         url = 'https://gcr.io'
         username = '_json_key'
-        password = file('C:\\Users\\quantizator\\Downloads\\Kite-e3bf877e119f.json').text
+        password = file(GCE_KEY_LOCATION).text
     }
 }
 apply plugin: 'maven-publish'
@@ -132,6 +132,7 @@ import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 
 def docker_application_name = "kafka-experiments-documents"
 def docker_healthcheck_port = "\${DOCUMENTS_SERVICE_MANAGEMENT_PORT}"
+def project_id = GCE_PROJECT_ID
 
 task createDockerfile(type: Dockerfile) {
     group 'build'
@@ -149,7 +150,7 @@ task buildImage(type: DockerBuildImage) {
     group 'build'
     dependsOn createDockerfile
     inputDir = createDockerfile.destFile.asFile.orNull.parentFile
-    tags = ["eu.gcr.io/kite-221910/${docker_application_name}:latest"]
+    tags = ["eu.gcr.io/${project_id}/${docker_application_name}:latest"]
 }
 
 task pushImage(type: DockerPushImage) {
