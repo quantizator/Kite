@@ -12,6 +12,7 @@ _site/
 .settings
 .springBeans
 .DS_Store
+*/gradle.properties
 *.sw*
 *.iml
 *.ipr
