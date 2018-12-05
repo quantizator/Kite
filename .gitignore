@@ -12,7 +12,6 @@ _site/
 .settings
 .springBeans
 .DS_Store
-*/.idea
 *.sw*
 *.iml
 *.ipr
