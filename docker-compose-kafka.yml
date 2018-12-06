@@ -19,7 +19,7 @@ services:
                 max_attempts: 10
                 window: 120s
     broker:
-        image: wurstmeister/kafka
+        image: eu.gcr.io/kite-221910/kafka-broker
         ports:
            - target: 9092
              published: 9092
@@ -28,11 +28,14 @@ services:
         environment:
             KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
             HOSTNAME_COMMAND: "curl -H 'Metadata-Flavor:Google' http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip"
-            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://:9099,OUTSIDE://_{HOSTNAME_COMMAND}:9092
+            KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://:9099,OUTSIDE://_{HOSTNAME_COMMAND}:9092"
             KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
-            KAFKA_LISTENERS: PLAINTEXT://:9099,OUTSIDE://:9092
+            KAFKA_LISTENERS: "PLAINTEXT://:9099,OUTSIDE://:9092"
             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,OUTSIDE:PLAINTEXT
             KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+            KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "_{HOSTNAME_COMMAND}:9092"
+            KAFKA_CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: "2"
+            KAFKA_CONFLUENT_METRICS_REPORTER_VOLUME_METRICS_REFRESH_MS: "3000"
         volumes:
             - /mnt/kafkadata/broker:/kafka
         depends_on:
@@ -169,7 +172,7 @@ services:
         image: confluentinc/cp-ksql-server
         ports: ["9024:9024"]
         environment:
-            KSQL_BOOTSTRAP_SERVERS: "broker:9092"
+            KSQL_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
             KSQL_KSQL_SERVICE_ID: "confluent_kite_ksql"
             KSQL_LISTENERS: http://0.0.0.0:9024
             KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:9090"
