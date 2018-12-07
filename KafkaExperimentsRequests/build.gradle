@@ -68,13 +68,14 @@ repositories {
     maven { url "https://repo.spring.io/libs-milestone" }
     maven { url "http://packages.confluent.io/maven" }
     maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 
 
 ext {
     springCloudVersion = 'Greenwich.M1'
     springCloudStreamVersion = 'Fishtown.RC2'
-    springAdminVersion = '2.1.1-SNAPSHOT'
+//    springAdminVersion = '2.1.1-SNAPSHOT'
 }
 
 apply plugin: "org.liquibase.gradle"
@@ -112,9 +113,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.projectreactor:reactor-core")
     implementation("io.projectreactor.kafka:reactor-kafka")
+    implementation("io.confluent:monitoring-interceptors:3.3.0")
     implementation("org.apache.kafka:kafka-log4j-appender:1.0.0")
     implementation("org.apache.avro:avro:1.8.2")
-    implementation("io.springfox:springfox-swagger2:2.8.0")
 //    implementation("io.confluent:kafka-schema-registry-client:4.0.0")
 //    implementation("io.confluent:kafka-streams-avro-serde:4.0.0")
 //    implementation("org.apache.kafka:kafka-tools:2.0.0")
@@ -129,7 +130,7 @@ dependencies {
     implementation("org.jooq:jooq:3.11.5")
     implementation("org.jooq:jooq-codegen:3.11.5")
     implementation("com.zaxxer:HikariCP:3.2.0")
-
+    implementation("org.springframework.kafka:spring-kafka")
     testImplementation('org.springframework.boot:spring-boot-starter-test')
     testImplementation('org.springframework.cloud:spring-cloud-stream-test-support')
 
@@ -253,7 +254,6 @@ task createDockerfile(type: Dockerfile) {
     runCommand 'apk --update --no-cache add curl'
     entryPoint 'java'
     defaultCommand '-jar', "/app/${docker_application_name}.jar", '-Xms512m -Xmx3g'
-//    instruction "HEALTHCHECK CMD curl -f http://localhost:${docker_healthcheck_port}/health || exit 1"
 }
 
 task buildImage(type: DockerBuildImage) {

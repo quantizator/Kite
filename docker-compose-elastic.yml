@@ -21,7 +21,8 @@ services:
         ports: ["9251:9600"]
         environment:
             KAFKA_BOOTSTRAP_SERVERS: "broker:9092"
-            EVENTS_TOPIC: "events-trail"
+            EVENTS_TOPIC: "events-stream-new-1"
+            LOGGING_TOPIC: "logging-new"
             ELASTICSEARCH_URL: "http://elasticsearch:9200"
         depends_on: 
             - elasticsearch
@@ -45,10 +46,11 @@ services:
         ports: ["9252:9411"]
         environment:
             STORAGE_TYPE: elasticsearch
-            ES_HOSTS: elasticsearch
+            ES_HOSTS: http://elasticsearch:9200
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
         depends_on:
             - elasticsearch
-        networks: [elastic]
+        networks: [elastic, kafka]
 
 volumes:
     esdata:

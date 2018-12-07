@@ -2,6 +2,7 @@ spring.application.name: applications
 
 server.port: ${APPLICATIONS_SERVICE_PORT}
 
+spring.zipkin.locator.discovery.enabled: true
 management.server.port: ${APPLICATIONS_SERVICE_MANAGEMENT_PORT}
 management.security.enabled: false
 
@@ -28,109 +29,133 @@ eureka:
   instance:
     leaseRenewalIntervalInSeconds: 10
     health-check-url-path: /health
+    preferIpAddress: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
     metadata-map:
       management:
         port: ${management.server.port}
+        instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
         context-path: /
 
-#spring.boot.admin.client.url: http://localhost:8080
+spring:
+  cloud:
+    inetutils:
+      preferred-networks:
+        - 10.0
+
+spring.boot.admin:
+  client:
+    url: ${ADMIN_URL}
+    period: 10000
+    instance:
+      prefer-ip: true
+#      name: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+#      service-base-url: http://${spring.application.name}:${server.port}
 
 # Настройки Cloud Stream для Kafka Streams
-spring.cloud.stream.kafka.streams.binder.configuration.application.server: localhost:${APPLICATIONS_SERVICE_PORT}
 
 spring.cloud.stream.kafka.binder:
   brokers: ${KAFKA_BOOTSTRAP_SERVERS}
   autoAddPartitions: true
   replicationFactor: 2
-  minPartitionCount: 2
+#  minPartitionCount: 2
+  headers: aggregateName
 
-
-spring.cloud.stream.kafka.streams.binder:
-  brokers: ${KAFKA_BOOTSTRAP_SERVERS}
-  zkNodes: ${KAFKA_ZK_NODES}
-  configuration:
-    commit.interval.ms: 1000
-    schema.registry.url: ${KAFKA_SCHEMA_REGISTRY}
-    auto.register.schemas: true
-    specific.avro.reader: true
-    max.schemas.per.subject: 1000
-    value.subject.name.strategy: io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
-    default.deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
-
-spring.cloud.stream.schemaRegistryClient.endpoint: ${KAFKA_SCHEMA_REGISTRY}
-#spring.cloud.stream.schema.avro.dynamicSchemaGenerationEnabled: true
-
-spring.cloud.stream.kafka.bindings.events-outgoing.producer:
-  bufferSize: 0
-  configuration:
-    key.serializer: org.apache.kafka.common.serialization.StringSerializer
-    value.serializer: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerializer
-    commit.interval.ms: 50
-    metadata.max.age.ms: 10000
-    batch.size: 0
-    retention.ms: -1
-    schema.registry.url: ${KAFKA_SCHEMA_REGISTRY}
-    auto.register.schemas: true
-    specific.avro.reader: true
-    max.schemas.per.subject: 1000
-    value.subject.name.strategy: io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
-    default.deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
-
-spring.cloud.stream.kafka.bindings.events-projecting-outgoing.producer:
-  bufferSize: 0
-  configuration:
-    commit.interval.ms: 50
 
 spring.cloud.stream.kafka.streams:
-  binder.configuration:
-    state.dir: ${KAFKA_STATE_DIR:/tmp/kafka-state}
-    default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-    default.value.serde: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
-  bindings.events-incoming.consumer:
-    valueSerde: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
-    application-id: ${spring.application.name}
-  bindings.events-projecting-outgoing.producer:
-    valueSerde: test.common.service.EventHolderSerde
-  bindings.events-projecting-incoming.consumer:
-    valueSerde: test.common.service.EventHolderSerde
-    application-id: ${spring.application.name}
+  binder:
+    brokers: ${KAFKA_BOOTSTRAP_SERVERS}
+    requiredAcks: 2
+    zkNodes: ${KAFKA_ZK_NODES}
+    configuration:
+      application.server: localhost:${APPLICATIONS_SERVICE_PORT}
+      commit.interval.ms: 1000
+      schema.registry.url: ${KAFKA_SCHEMA_REGISTRY}
+      auto.register.schemas: true
+      specific.avro.reader: true
+      max.schemas.per.subject: 1000
+      state.dir: ${KAFKA_STATE_DIR:/tmp/kafka-state}
+      default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+      default.value.serde: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
+      value.subject.name.strategy: io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
+      default.deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
+  bindings:
+    events-incoming.consumer:
+      valueSerde: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
+      application-id: ${spring.application.name}
+    events-projecting-outgoing.producer:
+      valueSerde: test.common.service.EventHolderSerde
+    events-projecting-incoming.consumer:
+      valueSerde: test.common.service.EventHolderSerde
+      application-id: ${spring.application.name}
 
-#spring.integration.readOnly.headers: contentType
+spring.cloud.stream.bindings:
+  events-incoming:
+    destination: ${EVENTS_TOPIC_NAME}
+    group: ${spring.application.name}
+    consumer:
+      concurrency: 3
+      partitioned: true
+      useNativeDecoding: true
+  events-outgoing:
+    destination: ${EVENTS_TOPIC_NAME}
+    producer:
+      partition-count: 5
+      partition-key-expression: headers['kafka_messageKey']
+      useNativeEncoding: true
+  events-projecting-incoming:
+    destination: ${SNAPSHOT_TOPIC_NAME}
+    group: ${spring.application.name}
+    consumer:
+      concurrency: 3
+#      partitioned: true
+      useNativeDecoding: true
+  events-projecting-outgoing:
+    destination: ${SNAPSHOT_TOPIC_NAME}
+    producer:
+      sync: true
+#      partition-count: 2
+#      partition-key-expression: headers['kafka_messageKey']
+      useNativeEncoding: true
+  events-quarantine-outgoing:
+    destination: events-quarantine
+    producer:
+      partition-count: 2
+      partition-key-expression: headers['kafka_messageKey']
+      useNativeEncoding: true
+  error:
+    destination: events-errors
 
-spring.cloud.stream.bindings.events-incoming:
-  destination: ${EVENTS_TOPIC_NAME}
-  group: ${spring.application.name}
-  consumer:
-    partitioned: true
-    useNativeDecoding: true
-spring.cloud.stream.bindings.events-outgoing:
-  destination: ${EVENTS_TOPIC_NAME}
-  producer:
-    partition-key-expression: headers['kafka_messageKey']
-    useNativeEncoding: true
-spring.cloud.stream.bindings.events-projecting-incoming:
-  destination: ${SNAPSHOT_TOPIC_NAME}
-  group: ${spring.application.name}
-  consumer:
-    partitioned: true
-    useNativeDecoding: true
-spring.cloud.stream.bindings.events-projecting-outgoing:
-  destination: ${SNAPSHOT_TOPIC_NAME}
-  producer:
-    partition-key-expression: headers['kafka_messageKey']
-    useNativeEncoding: true
-spring.cloud.stream.bindings.events-quarantine-outgoing:
-  destinations: events-quarantine
-  producer:
-    partition-key-expression: headers['kafka_messageKey']
-    useNativeEncoding: true
-spring.cloud.stream.bindings.error.destination: events-errors
+spring.cloud.stream.kafka.bindings:
+  events-outgoing.producer:
+    bufferSize: 0
+    configuration:
+      key.serializer: org.apache.kafka.common.serialization.StringSerializer
+      value.serializer: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerializer
+      interceptor.classes: io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor
+      commit.interval.ms: 200
+      metadata.max.age.ms: 10000
+      batch.size: 0
+      retention.ms: -1
+      schema.registry.url: ${KAFKA_SCHEMA_REGISTRY}
+      auto.register.schemas: true
+      specific.avro.reader: true
+      max.schemas.per.subject: 1000
+      value.subject.name.strategy: io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
+      default.deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
+  events-projecting-outgoing.producer:
+    bufferSize: 0
+    configuration:
+      commit.interval.ms: 200
+      interceptor.classes: io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor
+  events-incoming.consumer:
+    configuration:
+      interceptor.classes: io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor
+  events-projecting-incoming.consumer:
+    configuration:
+      interceptor.classes: io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor
 
-#spring.cloud.stream.bindings.events-errors:
-#  destination: events-errors
-#  group: ${spring.application.name}
-#  consumer:
-#    useNativeDecoding: true
+spring.cloud.stream.schemaRegistryClient.endpoint: ${KAFKA_SCHEMA_REGISTRY}
 
 # Специфичные настройки приложения
 
