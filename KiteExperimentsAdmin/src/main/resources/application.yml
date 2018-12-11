@@ -1,18 +1,16 @@
+spring.application.name: admin
+
 spring.boot.admin.context-path: /admin
 
 spring.jackson.serialization.write-dates-as-timestamps: true
 
 eureka:
   client:
+    register-with-eureka: false
     registryFetchIntervalSeconds: 10
     serviceUrl.defaultZone: ${EUREKA_DEFAULT_ZONE_URL}
     healthcheck.enabled: true
     fetchRegistry: true
-  instance:
-    leaseRenewalIntervalInSeconds: 10
-    health-check-url-path: /health
-    metadata-map:
-      startup: ${random.int}
 
 management:
   endpoints:
@@ -22,3 +20,9 @@ management:
   endpoint:
     health:
       show-details: ALWAYS
+
+spring:
+  cloud:
+    inetutils:
+      preferred-networks:
+        - 10.0
