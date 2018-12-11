@@ -30,6 +30,7 @@ services:
             HOSTNAME_COMMAND: "curl -H 'Metadata-Flavor:Google' http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip"
             KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://:9099,OUTSIDE://_{HOSTNAME_COMMAND}:9092"
             KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+            KAFKA_DEFAULT_REPLICATION_FACTOR: "2"
             KAFKA_LISTENERS: "PLAINTEXT://:9099,OUTSIDE://:9092"
             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,OUTSIDE:PLAINTEXT
             KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
