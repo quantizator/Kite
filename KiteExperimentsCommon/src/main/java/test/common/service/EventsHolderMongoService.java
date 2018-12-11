@@ -6,10 +6,6 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.streams.kstream.KStream;
@@ -17,9 +13,11 @@ import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorContext;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.bson.json.JsonWriterSettings;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.cloud.stream.binder.kafka.streams.SendToDlqAndContinue;
@@ -34,16 +32,8 @@ import test.common.configuration.MongoConfiguration;
 @Component
 @EnableBinding(KafkaEventProcessor.class)
 @Slf4j
+@EnableAutoConfiguration
 public class EventsHolderMongoService implements IEventsHolderRemoteAccessor {
-
-    @Setter
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public class EventsHolderDocument {
-        private String aggregateIdentifier;
-        private AggregateEventsHolder holder;
-    }
 
     private MongoClient mongoClient;
 
@@ -79,7 +69,7 @@ public class EventsHolderMongoService implements IEventsHolderRemoteAccessor {
 
             @Override
             public void process(String aggregateIdentifier, AggregateEventsHolder holder) {
-                log.info("Storing events holder [{}] to Mongo", holder);
+                log.info("Storing events holder for aggregate [{}] to Mongo. Holder: [{}]", aggregateIdentifier, holder);
                 saveAggregateEventsHolder(aggregateIdentifier, holder)
                         .doOnError(throwable -> {
                             byte[] keyBytes = getKeySerializer().serialize(KafkaEventProcessor.DLQ_OUTGOING, aggregateIdentifier);
@@ -150,7 +140,7 @@ public class EventsHolderMongoService implements IEventsHolderRemoteAccessor {
     }
 
     private AggregateEventsHolder convertDocumentToHolder(Document document) {
-        String jsonString = document.toJson();
+        String jsonString = document.toJson(buildWriterSettings());
         try {
             EventsHolderDocument holderDocument = objectMapper.readValue(jsonString, EventsHolderDocument.class);
             return holderDocument.getHolder();
@@ -159,6 +149,12 @@ public class EventsHolderMongoService implements IEventsHolderRemoteAccessor {
                     document.getObjectId("_id"), ex);
             throw new RuntimeException(ex);
         }
+    }
+
+    private static JsonWriterSettings buildWriterSettings() {
+        return JsonWriterSettings.builder()
+                .int64Converter((value, writer) -> writer.writeNumber(value.toString()))
+                .build();
     }
 
     private Mono<MongoCollection> getAggregateHolderCollection(String aggregateName) {
