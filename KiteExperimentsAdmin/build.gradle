@@ -58,13 +58,13 @@ repositories {
     maven { url "https://repo.spring.io/milestone" }
     maven { url "https://repo.spring.io/libs-milestone" }
     maven { url "http://packages.confluent.io/maven" }
-    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+    maven { url "https://oss.sonatype.org/content/repositories/releases/" }
 }
 
 
 ext {
     springCloudVersion = 'Greenwich.M3'
-    springAdminVersion = '2.1.1-SNAPSHOT'
+    springAdminVersion = '2.1.1'
 }
 
 dependencies {
@@ -115,8 +115,8 @@ task createDockerfile(type: Dockerfile) {
     copyFile jar.archiveName, "/app/${docker_application_name}.jar"
     entryPoint 'java'
     defaultCommand '-jar', "/app/${docker_application_name}.jar"
-    instruction "HEALTHCHECK --interval=30s --timeout=30s --retries=5 CMD " +
-            "curl --silent --fail localhost:${docker_healthcheck_port}/health || exit 1"
+//    instruction "HEALTHCHECK --interval=30s --timeout=30s --retries=5 CMD " +
+//            "curl --silent --fail localhost:${docker_healthcheck_port}/health || exit 1"
 }
 
 task buildImage(type: DockerBuildImage) {
