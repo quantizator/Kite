@@ -10,9 +10,6 @@ buildscript {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "io.spring.gradle:dependency-management-plugin:0.5.2.RELEASE"
         classpath "com.commercehub.gradle.plugin:gradle-avro-plugin:0.15.1"
-//        classpath "org.postgresql:postgresql:42.2.5"
-//        classpath "org.jooq:jooq-codegen:3.11.5"
-//        classpath "gradle.plugin.org.liquibase:liquibase-gradle-plugin:2.0.1"
         classpath "org.yaml:snakeyaml:1.23"
     }
 }
