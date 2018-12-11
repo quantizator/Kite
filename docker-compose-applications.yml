@@ -7,16 +7,26 @@ services:
         environment:
             APPLICATIONS_SERVICE_PORT: "9093"
             APPLICATIONS_SERVICE_MANAGEMENT_PORT: "9198"
-            KAFKA_BOOTSTRAP_SERVERS: "broker:9092"
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
             KAFKA_ZK_NODES: "zookeeper:2181"
-            KAFKA_SCHEMA_REGISTRY: "http://schema_registry:9090"
+            KAFKA_SCHEMA_REGISTRY: "http://schema-registry:9090"
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
-            ZIPKIN_URL: http://zipkin:9252
+            ZIPKIN_URL: "http://zipkin:9252"
+            ADMIN_URL: "http://admin:8080/admin"
             POSTGRES_SERVER: "postgres:5432"
             POSTGRES_USER: "postgres"
             POSTGRES_PASSWORD: "hahaha123"
             POSTGRES_MAX_POOL_SIZE: "10"
             POSTGRES_CONNECTION_LIFETIME: "20000"
+            EVENTS_TOPIC_NAME: "events-streaming"
+            KAFKA_STATE_DIR: /tmp/kafka-state/applications
+            KAFKA_LOGGING_TOPIC: "logging-stream"
+            SNAPSHOT_TOPIC_NAME: "events-projecting-applications"
+            STATE_STORE_NAME: "applications-awesome-store"
+            MONGO_SERVER: "35.241.112.232:9098"
+            MONGO_USER: "root"
+            MONGO_PASSWORD: "root"
+            MONGO_AUTH_DB: "admin"
         healthcheck:
           test: "curl --silent --fail localhost:9198/health || exit 1"
           interval: 30s
@@ -35,12 +45,18 @@ services:
         environment:
             DOCUMENTS_SERVICE_PORT: "9094"
             DOCUMENTS_SERVICE_MANAGEMENT_PORT: "9199"
-            KAFKA_BOOTSTRAP_SERVERS: "broker:9092"
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
             KAFKA_ZK_NODES: "zookeeper:2181"
-            KAFKA_SCHEMA_REGISTRY: "http://schema_registry:9090"
+            KAFKA_SCHEMA_REGISTRY: "http://schema-registry:9090"
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
-            ZIPKIN_URL: http://zipkin:9252
-            MONGO_SERVER: "35.228.55.90:9098"
+            ZIPKIN_URL: "http://zipkin:9252"
+            ADMIN_URL: "http://admin:8080/admin"
+            EVENTS_TOPIC_NAME: "events-streaming"
+            SNAPSHOT_TOPIC_NAME: "events-projecting-documents"
+            STATE_STORE_NAME: "documents-awesome-store"
+            KAFKA_STATE_DIR: /tmp/kafka-state/documents
+            KAFKA_LOGGING_TOPIC: "logging-stream"
+            MONGO_SERVER: "35.241.112.232:9098"
             MONGO_USER: "root"
             MONGO_PASSWORD: "root"
             MONGO_DB: "documents-new"
@@ -64,12 +80,18 @@ services:
         environment:
             REGULATIONS_SERVICE_PORT: "9095"
             REGULATIONS_SERVICE_MANAGEMENT_PORT: "9196"
-            KAFKA_BOOTSTRAP_SERVERS: "broker:9092"
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
             KAFKA_ZK_NODES: "zookeeper:2181"
-            KAFKA_SCHEMA_REGISTRY: "http://schema_registry:9090"
+            KAFKA_SCHEMA_REGISTRY: "http://schema-registry:9090"
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
-            ZIPKIN_URL: http://zipkin:9252
-            MONGO_SERVER: "35.228.55.90:9098"
+            ZIPKIN_URL: "http://zipkin:9252"
+            ADMIN_URL: "http://admin:8080/admin"
+            EVENTS_TOPIC_NAME: "events-streaming"
+            SNAPSHOT_TOPIC_NAME: "events-projecting-regulations"
+            STATE_STORE_NAME: "regulations-awesome-store"
+            KAFKA_STATE_DIR: /tmp/kafka-state/regulations
+            KAFKA_LOGGING_TOPIC: "logging-stream"
+            MONGO_SERVER: "35.241.112.232:9098"
             MONGO_USER: "root"
             MONGO_PASSWORD: "root"
             MONGO_DB: "documents-new"
@@ -93,7 +115,8 @@ services:
         environment:
             BOOT_ADMIN_CLIENT_URL: "http://admin:8080"
             DISCOVERY_SERVICE_PORT: "8761"
-            KAFKA_BOOTSTRAP_SERVERS: "broker:9092"
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+            KAFKA_LOGGING_TOPIC: "logging-stream"
         healthcheck:
           test: "curl --silent --fail localhost:8761/actuator/health || exit 1"
           interval: 30s
@@ -111,7 +134,9 @@ services:
         environment:
             GATEWAY_SERVICE_PORT: "8762"
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
-            KAFKA_BOOTSTRAP_SERVERS: "broker:9092"
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+            KAFKA_LOGGING_TOPIC: "logging-stream"
+            ADMIN_URL: "http://admin:8080/admin"
         healthcheck:
           test: "curl --silent --fail localhost:8762/health || exit 1"
           interval: 30s
@@ -129,11 +154,11 @@ services:
         ports: ["8080:8080"]
         environment:
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
-        healthcheck:
-          test: "curl --silent --fail localhost:8080/health || exit 1"
-          interval: 30s
-          timeout: 10s
-          retries: 10
+        # healthcheck:
+          # test: "curl --silent --fail localhost:8080/health || exit 1"
+          # interval: 30s
+          # timeout: 10s
+          # retries: 10
         depends_on: [discovery]
         deploy:
             mode: replicated

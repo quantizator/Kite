@@ -20,9 +20,9 @@ services:
         image: eu.gcr.io/kite-221910/logstash:snapshot
         ports: ["9251:9600"]
         environment:
-            KAFKA_BOOTSTRAP_SERVERS: "broker:9092"
-            EVENTS_TOPIC: "events-stream-new-1"
-            LOGGING_TOPIC: "logging-new"
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+            EVENTS_TOPIC: "events-streaming"
+            LOGGING_TOPIC: "logging-stream"
             ELASTICSEARCH_URL: "http://elasticsearch:9200"
         depends_on: 
             - elasticsearch
