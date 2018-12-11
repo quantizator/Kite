@@ -1,2 +1,6 @@
-spring.zipkin.base-url: ${ZIPKIN_URL}
-spring.sleuth.sampler.probability: 1
+spring.sleuth.sampler.probability: 1.0
+spring.zipkin:
+  base-url: ${ZIPKIN_URL}
+  sender.type: kafka
+  locator.discovery.enabled: true
+spring.kafka.producer.bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}

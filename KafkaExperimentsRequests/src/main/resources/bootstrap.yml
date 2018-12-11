@@ -4,5 +4,3 @@ spring.zipkin:
   sender.type: kafka
   locator.discovery.enabled: true
 spring.kafka.producer.bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
-
-
