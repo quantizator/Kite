@@ -8,6 +8,7 @@ import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
@@ -30,6 +31,7 @@ import java.util.List;
 @EnableBinding(KafkaEventProcessor.class)
 @EnableConfigurationProperties(KafkaStoreConfigurationProperties.class)
 @Component
+@EnableAutoConfiguration
 public class EventStoreKafka implements IEventStore {
 
     private static final String AGGREGATE_NAME_HEADER = "aggregateName";
@@ -189,6 +191,8 @@ public class EventStoreKafka implements IEventStore {
 
                                 if (conversionService.isDomainEventRecord(eventRecord)) {
                                     holder =  updateEventsHolder(eventRecord, aggregate);
+                                    log.info("Event holder for aggregate [{}] successfully updated with event: [{}]. Holder: [{}]",
+                                            identifier, eventRecord, holder);
                                 }
                                 processEvent(identifier, eventRecord);
                             } catch (EventProcessorException ex) {
@@ -222,6 +226,7 @@ public class EventStoreKafka implements IEventStore {
             checkHandleDomainEvent(domainEvent, buildLastVersionHolder(eventsHolder));
             return true;
         } catch (Exception ex) {
+            log.warn("Duplicate for event detected [{}]", record);
             return false;
         }
     }
@@ -265,13 +270,6 @@ public class EventStoreKafka implements IEventStore {
 
     }
 
-    @StreamListener(KafkaEventProcessor.EVENTS_ERRORS)
-    private void handleError(Message<?> message) {
-        log.error("В канале [{0}] произошла ошибка [{1}]",
-                new Object[]{message.getHeaders().get(KafkaHeaders.DLT_ORIGINAL_TOPIC),
-                        message.getHeaders().get(KafkaHeaders.DLT_EXCEPTION_MESSAGE)});
-    }
-
 
     /**
      * Получает локальное хранилище данного процессора стримов
@@ -310,7 +308,7 @@ public class EventStoreKafka implements IEventStore {
             eventPublisher.publishEvent(event);
         } catch (EventConversionException ex) {
             log.error("Conversion of avro event record for aggregate [{}] failed. Skipping event processing", aggregateId, ex);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             throw new EventProcessorException(ex);
         }
     }

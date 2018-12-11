@@ -17,7 +17,6 @@ public interface KafkaEventProcessor {
     String PROJECTING_OUTGOING = "events-projecting-outgoing";
     String PROJECTING_INCOMING = "events-projecting-incoming";
 
-    String EVENTS_ERRORS = "events-errors";
     String QUARANTINE_OUTGOING = "events-quarantine-outgoing";
     String DLQ_OUTGOING = "dlq";
     String ERROR_INCOMING = "events-errors-incoming";
@@ -48,9 +47,6 @@ public interface KafkaEventProcessor {
 
     @Output(PROJECTING_OUTGOING)
     KStream<String, AggregateEventsHolder> projectingOutgoing();
-
-    @Input(EVENTS_ERRORS)
-    SubscribableChannel eventErrors();
 
     @Output(QUARANTINE_OUTGOING)
     MessageChannel quarantineOutgoing();
