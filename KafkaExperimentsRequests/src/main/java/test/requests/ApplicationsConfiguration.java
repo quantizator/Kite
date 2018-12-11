@@ -1,9 +1,13 @@
 package test.requests;
 
+import brave.sampler.Sampler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.cloud.stream.annotation.StreamRetryTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.policy.AlwaysRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import test.common.configuration.ApplicationConfiguration;
 import test.common.domain.EventPublisher;
@@ -52,4 +56,15 @@ public class ApplicationsConfiguration extends ApplicationConfiguration {
         return WebClient.builder();
     }
 
+    @StreamRetryTemplate
+    public RetryTemplate retryTemplate() {
+        RetryTemplate template = new RetryTemplate();
+        template.setRetryPolicy(new AlwaysRetryPolicy());
+        return template;
+    }
+
+    @Bean
+    public Sampler defaultSampler() {
+        return Sampler.ALWAYS_SAMPLE;
+    }
 }

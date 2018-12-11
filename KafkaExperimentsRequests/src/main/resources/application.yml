@@ -53,13 +53,11 @@ spring.boot.admin:
 #      service-base-url: http://${spring.application.name}:${server.port}
 
 # Настройки Cloud Stream для Kafka Streams
-
 spring.cloud.stream.kafka.binder:
   brokers: ${KAFKA_BOOTSTRAP_SERVERS}
   autoAddPartitions: true
   replicationFactor: 2
   minPartitionCount: 2
-
 
 spring.cloud.stream.kafka.streams:
   binder:

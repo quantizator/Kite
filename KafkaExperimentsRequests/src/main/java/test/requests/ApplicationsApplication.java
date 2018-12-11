@@ -23,7 +23,6 @@ import test.common.service.KafkaEventProcessor;
 @EnableDiscoveryClient
 @EnableBinding(KafkaEventProcessor.class)
 @Import({ApplicationsConfiguration.class,
-//        ApplicationsEventStoreConfiguration.class,
         PersistenceConfiguration.class})
 @EnableCircuitBreaker
 @ComponentScan(basePackages = {"test.requests", "test.requests.rest"})
