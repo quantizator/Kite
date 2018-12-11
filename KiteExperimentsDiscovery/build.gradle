@@ -58,13 +58,13 @@ repositories {
     maven { url "https://repo.spring.io/milestone" }
     maven { url "https://repo.spring.io/libs-milestone" }
     maven { url "http://packages.confluent.io/maven" }
-    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+    maven { url "https://oss.sonatype.org/content/repositories/releases/" }
 }
 
 
 ext {
     springCloudVersion = 'Greenwich.M3'
-    springAdminVersion = '2.1.1-SNAPSHOT'
+    springAdminVersion = '2.1.1'
 }
 
 dependencies {
