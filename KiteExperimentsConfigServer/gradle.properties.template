@@ -1,4 +1,4 @@
 # Specify location for json key used to access service registry
-GCE_KEY_LOCATION=/Users/macbook/Downloads/kite-221910-497e2d31ff9d.json
+GCE_KEY_LOCATION=
 # Specify ID of Google Cloud Engine Project
 GCE_PROJECT_ID=kite-221910
