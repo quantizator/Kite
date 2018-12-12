@@ -160,10 +160,10 @@ publishing {
     }
 }
 
-def postgres_host = "35.228.55.90:5432"
-def postgres_username = "postgres"
-def postgres_password = "hahaha123"
-def postgres_db = "requests"
+def postgres_host = DB_POSTGRES_HOST
+def postgres_username = DB_POSTGRES_USERNAME
+def postgres_password = DB_POSTGRES_PASSWORD
+def postgres_db = DB_POSTGRES_DATABASE
 def postgres_connection_string = "jdbc:postgresql://${postgres_host}/${postgres_db}"
 
 
