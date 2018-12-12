@@ -167,4 +167,15 @@ databaseChangeLog() {
             column(name: 'active', type: 'boolean', defaultValue: 'false', remarks: 'Статус заявителя в системе (активен/неактивен)')
         }
     }
+    changeSet(id: 'add-primary-indexes', author: 'dmste') {
+        createIndex(indexName: 'idx_individual_identifier', schemaName: 'applications', tableName: 'individuals', unique: true) {
+            column(name: 'identifier', type: 'VARCHAR(20)')
+        }
+        createIndex(indexName: 'idx_organization_identifier', schemaName: 'applications', tableName: 'organizations', unique: true) {
+            column(name: 'identifier', type: 'VARCHAR(20)')
+        }
+        createIndex(indexName: 'idx_application_number', schemaName: 'applications', tableName: 'applications', unique: true) {
+            column(name: 'number', type: 'VARCHAR(10)')
+        }
+    }
 }
