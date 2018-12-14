@@ -1,5 +1,2 @@
 spring.application.name: kite-experiments-admin
-spring:
-  cloud:
-    config:
-      uri=${KITE_EXPERIMENTS_CONFIG_SERVER}
+spring.cloud.config.uri: ${KITE_EXPERIMENTS_CONFIG_SERVER}

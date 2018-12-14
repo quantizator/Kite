@@ -75,7 +75,6 @@ repositories {
 ext {
     springCloudVersion = 'Greenwich.M1'
     springCloudStreamVersion = 'Fishtown.RC2'
-//    springAdminVersion = '2.1.1-SNAPSHOT'
 }
 
 apply plugin: "org.liquibase.gradle"

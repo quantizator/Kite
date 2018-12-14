@@ -13,6 +13,7 @@ services:
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
             ZIPKIN_URL: "http://zipkin:9252"
             ADMIN_URL: "http://admin:8080/admin"
+            KITE_EXPERIMENTS_CONFIG_SERVER: "http://config:8888"
             POSTGRES_SERVER: "postgres:5432"
             POSTGRES_USER: "postgres"
             POSTGRES_PASSWORD: "hahaha123"
@@ -32,7 +33,7 @@ services:
           interval: 30s
           timeout: 10s
           retries: 10
-        depends_on: [discovery]
+        depends_on: [discovery, config]
         deploy:
             mode: replicated
             replicas: 3
@@ -51,6 +52,7 @@ services:
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
             ZIPKIN_URL: "http://zipkin:9252"
             ADMIN_URL: "http://admin:8080/admin"
+            KITE_EXPERIMENTS_CONFIG_SERVER: "http://config:8888"
             EVENTS_TOPIC_NAME: "events-streaming"
             SNAPSHOT_TOPIC_NAME: "events-projecting-documents"
             STATE_STORE_NAME: "documents-awesome-store"
@@ -66,7 +68,7 @@ services:
           interval: 30s
           timeout: 10s
           retries: 10
-        depends_on: [discovery]
+        depends_on: [discovery, config]
         deploy:
             mode: replicated
             replicas: 1
@@ -86,6 +88,7 @@ services:
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
             ZIPKIN_URL: "http://zipkin:9252"
             ADMIN_URL: "http://admin:8080/admin"
+            KITE_EXPERIMENTS_CONFIG_SERVER: "http://config:8888"
             EVENTS_TOPIC_NAME: "events-streaming"
             SNAPSHOT_TOPIC_NAME: "events-projecting-regulations"
             STATE_STORE_NAME: "regulations-awesome-store"
@@ -101,7 +104,7 @@ services:
           interval: 30s
           timeout: 10s
           retries: 10
-        depends_on: [discovery]
+        depends_on: [discovery, config]
         deploy:
             mode: replicated
             replicas: 1
@@ -117,11 +120,13 @@ services:
             DISCOVERY_SERVICE_PORT: "8761"
             KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
             KAFKA_LOGGING_TOPIC: "logging-stream"
+            KITE_EXPERIMENTS_CONFIG_SERVER: "http://config:8888"
         healthcheck:
           test: "curl --silent --fail localhost:8761/actuator/health || exit 1"
           interval: 30s
           timeout: 10s
           retries: 5
+        depends_on: [config]
         deploy:
             mode: replicated
             replicas: 1
@@ -137,12 +142,13 @@ services:
             KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
             KAFKA_LOGGING_TOPIC: "logging-stream"
             ADMIN_URL: "http://admin:8080/admin"
+            KITE_EXPERIMENTS_CONFIG_SERVER: "http://config:8888"
         healthcheck:
           test: "curl --silent --fail localhost:8762/health || exit 1"
           interval: 30s
           timeout: 10s
           retries: 5
-        depends_on: [discovery]
+        depends_on: [discovery, config]
         deploy:
             mode: replicated
             replicas: 1
@@ -154,18 +160,28 @@ services:
         ports: ["8080:8080"]
         environment:
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
-        # healthcheck:
-          # test: "curl --silent --fail localhost:8080/health || exit 1"
-          # interval: 30s
-          # timeout: 10s
-          # retries: 10
-        depends_on: [discovery]
+            KITE_EXPERIMENTS_CONFIG_SERVER: "http://config:8888"
+        depends_on: [discovery, config]
         deploy:
             mode: replicated
             replicas: 1
             placement:
                 constraints: [node.labels.type == regular] 
         networks: [kite]
+    config:
+        image: eu.gcr.io/kite-221910/kite-experiments-config:latest
+        ports: ["8888:8888", "9193:9193"]
+        environment:
+            CONFIG_REPOSITORY_URL: "https://github.com/smitienko96/kite-config-repo.git"
+            EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+            KAFKA_LOGGING_TOPIC: "logging-stream"
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: [node.labels.type == regular]
+        networks: [kite, kafka]
 networks:
     db:
         external: true

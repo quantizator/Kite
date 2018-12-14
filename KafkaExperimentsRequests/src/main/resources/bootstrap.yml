@@ -1,12 +1,11 @@
+spring.application.name: kafka-experiments-requests
+
 spring.sleuth.sampler.probability: 1.0
 spring.zipkin:
   base-url: ${ZIPKIN_URL}
   sender.type: kafka
   locator.discovery.enabled: true
 spring.kafka.producer.bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
-spring:
-  cloud:
-    config:
-      uri=${KITE_EXPERIMENTS_CONFIG_SERVER}
-spring.application:
-  name: kafka-experiments-requests
+server.port: ${APPLICATIONS_SERVICE_PORT}
+
+spring.cloud.config.uri: ${KITE_EXPERIMENTS_CONFIG_SERVER}
