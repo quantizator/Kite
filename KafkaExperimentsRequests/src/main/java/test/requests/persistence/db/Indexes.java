@@ -40,7 +40,10 @@ public class Indexes {
     public static final Index APPLICATION_SECTIONS_PKEY = Indexes0.APPLICATION_SECTIONS_PKEY;
     public static final Index APPLICATIONS_NUMBER_KEY = Indexes0.APPLICATIONS_NUMBER_KEY;
     public static final Index APPLICATIONS_PKEY = Indexes0.APPLICATIONS_PKEY;
+    public static final Index IDX_APPLICATION_NUMBER = Indexes0.IDX_APPLICATION_NUMBER;
+    public static final Index IDX_INDIVIDUAL_IDENTIFIER = Indexes0.IDX_INDIVIDUAL_IDENTIFIER;
     public static final Index INDIVIDUALS_PKEY = Indexes0.INDIVIDUALS_PKEY;
+    public static final Index IDX_ORGANIZATION_IDENTIFIER = Indexes0.IDX_ORGANIZATION_IDENTIFIER;
     public static final Index ORGANIZATIONS_PKEY = Indexes0.ORGANIZATIONS_PKEY;
 
     // -------------------------------------------------------------------------
@@ -53,7 +56,10 @@ public class Indexes {
         public static Index APPLICATION_SECTIONS_PKEY = Internal.createIndex("application_sections_pkey", ApplicationSections.APPLICATION_SECTIONS, new OrderField[] { ApplicationSections.APPLICATION_SECTIONS.ID }, true);
         public static Index APPLICATIONS_NUMBER_KEY = Internal.createIndex("applications_number_key", Applications.APPLICATIONS_, new OrderField[] { Applications.APPLICATIONS_.NUMBER }, true);
         public static Index APPLICATIONS_PKEY = Internal.createIndex("applications_pkey", Applications.APPLICATIONS_, new OrderField[] { Applications.APPLICATIONS_.ID }, true);
+        public static Index IDX_APPLICATION_NUMBER = Internal.createIndex("idx_application_number", Applications.APPLICATIONS_, new OrderField[] { Applications.APPLICATIONS_.NUMBER }, true);
+        public static Index IDX_INDIVIDUAL_IDENTIFIER = Internal.createIndex("idx_individual_identifier", Individuals.INDIVIDUALS, new OrderField[] { Individuals.INDIVIDUALS.IDENTIFIER }, true);
         public static Index INDIVIDUALS_PKEY = Internal.createIndex("individuals_pkey", Individuals.INDIVIDUALS, new OrderField[] { Individuals.INDIVIDUALS.ID }, true);
+        public static Index IDX_ORGANIZATION_IDENTIFIER = Internal.createIndex("idx_organization_identifier", Organizations.ORGANIZATIONS, new OrderField[] { Organizations.ORGANIZATIONS.IDENTIFIER }, true);
         public static Index ORGANIZATIONS_PKEY = Internal.createIndex("organizations_pkey", Organizations.ORGANIZATIONS, new OrderField[] { Organizations.ORGANIZATIONS.ID }, true);
     }
 }

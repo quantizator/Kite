@@ -42,7 +42,7 @@ import test.requests.persistence.db.tables.records.IndividualsRecord;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Individuals extends TableImpl<IndividualsRecord> {
 
-    private static final long serialVersionUID = -1895636281;
+    private static final long serialVersionUID = -845711514;
 
     /**
      * The reference instance of <code>applications.individuals</code>
@@ -168,7 +168,7 @@ public class Individuals extends TableImpl<IndividualsRecord> {
      */
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.INDIVIDUALS_PKEY);
+        return Arrays.<Index>asList(Indexes.IDX_INDIVIDUAL_IDENTIFIER, Indexes.INDIVIDUALS_PKEY);
     }
 
     /**

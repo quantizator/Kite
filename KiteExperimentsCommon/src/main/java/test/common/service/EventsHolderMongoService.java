@@ -3,6 +3,8 @@ package test.common.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.*;
@@ -35,6 +37,8 @@ import test.common.configuration.MongoConfiguration;
 @EnableAutoConfiguration
 public class EventsHolderMongoService implements IEventsHolderRemoteAccessor {
 
+    private static final String AGGREGATE_IDENTIFIER_FIELD = "aggregateIdentifier";
+
     private MongoClient mongoClient;
 
     private String databaseName;
@@ -45,7 +49,8 @@ public class EventsHolderMongoService implements IEventsHolderRemoteAccessor {
     private ObjectMapper objectMapper;
 
     public EventsHolderMongoService() {
-        this.objectMapper = ObjectMapperFactory.createKafkaStateStoreObjectMapper();
+        this.objectMapper = ObjectMapperFactory.
+                createKafkaStateStoreObjectMapper();
     }
 
     @StreamListener(KafkaEventProcessor.PROJECTING_INCOMING)
@@ -92,7 +97,7 @@ public class EventsHolderMongoService implements IEventsHolderRemoteAccessor {
      */
     private Mono<Void> saveAggregateEventsHolder(String identifier, AggregateEventsHolder holder) {
         String aggregateName = holder.aggregateName();
-        Mono<MongoCollection> holderCollection = getAggregateHolderCollection(aggregateName);
+        Mono<MongoCollection<Document>> holderCollection = getAggregateHolderCollection(aggregateName);
 
         return holderCollection.flatMap(collection -> {
             Document holderDocument = convertHolderToDocument(identifier, holder);
@@ -117,7 +122,7 @@ public class EventsHolderMongoService implements IEventsHolderRemoteAccessor {
      * @return
      */
     public Mono<AggregateEventsHolder> getAggregateEventsHolder(String aggregateName, String identifier) {
-        Mono<MongoCollection> holderCollection = getAggregateHolderCollection(aggregateName);
+        Mono<MongoCollection<Document>> holderCollection = getAggregateHolderCollection(aggregateName);
         return holderCollection.flatMap(collection -> {
             FindPublisher<Document> documents = collection.find(buildFilter(identifier));
             return Mono.from(documents);
@@ -125,7 +130,7 @@ public class EventsHolderMongoService implements IEventsHolderRemoteAccessor {
     }
 
     private Bson buildFilter(String identifier) {
-        return Filters.eq("aggregateIdentifier", identifier);
+        return Filters.eq(AGGREGATE_IDENTIFIER_FIELD, identifier);
     }
 
     private Document convertHolderToDocument(String identifier, AggregateEventsHolder holder) {
@@ -157,7 +162,7 @@ public class EventsHolderMongoService implements IEventsHolderRemoteAccessor {
                 .build();
     }
 
-    private Mono<MongoCollection> getAggregateHolderCollection(String aggregateName) {
+    private Mono<MongoCollection<Document>> getAggregateHolderCollection(String aggregateName) {
         MongoDatabase database = mongoClient.getDatabase(databaseName);
 
         MongoCollection collection = database.getCollection(aggregateName);
@@ -167,14 +172,17 @@ public class EventsHolderMongoService implements IEventsHolderRemoteAccessor {
         }
 
         return Mono.from(database.createCollection(aggregateName))
-                .handle((success, sink) -> {
+                .map(success -> {
                     if (Success.SUCCESS != success) {
-                        sink.error(new RuntimeException(
-                                String.format("Error occurred while creating new collection for aggregate [%s]", aggregateName)));
-                        return;
+                        throw new RuntimeException(
+                                String.format("Error occurred while creating new collection for aggregate [%s]", aggregateName));
                     }
-                    sink.next(database.getCollection(aggregateName));
-                    sink.complete();
+                    return database.getCollection(aggregateName);
+                }).doOnNext(newCollection -> {
+                    Mono.from(newCollection.createIndex(Indexes.text(AGGREGATE_IDENTIFIER_FIELD),
+                            new IndexOptions().unique(true)))
+                            .block();
+                    log.info("Index created with result [{}]", AGGREGATE_IDENTIFIER_FIELD);
                 });
     }
 

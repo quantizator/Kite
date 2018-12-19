@@ -41,7 +41,7 @@ import test.requests.persistence.db.tables.records.ApplicationsRecord;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Applications extends TableImpl<ApplicationsRecord> {
 
-    private static final long serialVersionUID = -1694182365;
+    private static final long serialVersionUID = -1902376889;
 
     /**
      * The reference instance of <code>applications.applications</code>
@@ -147,7 +147,7 @@ public class Applications extends TableImpl<ApplicationsRecord> {
      */
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.APPLICATIONS_NUMBER_KEY, Indexes.APPLICATIONS_PKEY);
+        return Arrays.<Index>asList(Indexes.APPLICATIONS_NUMBER_KEY, Indexes.APPLICATIONS_PKEY, Indexes.IDX_APPLICATION_NUMBER);
     }
 
     /**
