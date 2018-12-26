@@ -5,8 +5,8 @@ services:
         image: eu.gcr.io/kite-221910/kafka-experiments-applications:latest
         ports: ["9093:9093", "9198:9198"]
         environment:
-            APPLICATIONS_SERVICE_PORT: "9093"
-            APPLICATIONS_SERVICE_MANAGEMENT_PORT: "9198"
+            SERVICE_PORT: "9093"
+            SERVICE_MANAGEMENT_PORT: "9198"
             KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
             KAFKA_ZK_NODES: "zookeeper:2181"
             KAFKA_SCHEMA_REGISTRY: "http://schema-registry:9090"
@@ -39,13 +39,13 @@ services:
             replicas: 3
             placement:
                 constraints: [node.labels.type == regular] 
-        networks: [kite, db, kafka, elastic]
+        networks: [kite, db, mongo, kafka, elastic]
     documents:
         image: eu.gcr.io/kite-221910/kafka-experiments-documents:latest
         ports: ["9094:9094", "9199:9199"]
         environment:
-            DOCUMENTS_SERVICE_PORT: "9094"
-            DOCUMENTS_SERVICE_MANAGEMENT_PORT: "9199"
+            SERVICE_PORT: "9094"
+            SERVICE_MANAGEMENT_PORT: "9199"
             KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
             KAFKA_ZK_NODES: "zookeeper:2181"
             KAFKA_SCHEMA_REGISTRY: "http://schema-registry:9090"
@@ -80,8 +80,8 @@ services:
         image: eu.gcr.io/kite-221910/kafka-experiments-regulations:latest
         ports: ["9095:9095", "9196:9196"]
         environment:
-            REGULATIONS_SERVICE_PORT: "9095"
-            REGULATIONS_SERVICE_MANAGEMENT_PORT: "9196"
+            SERVICE_PORT: "9095"
+            SERVICE_MANAGEMENT_PORT: "9196"
             KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
             KAFKA_ZK_NODES: "zookeeper:2181"
             KAFKA_SCHEMA_REGISTRY: "http://schema-registry:9090"
@@ -172,7 +172,8 @@ services:
         image: eu.gcr.io/kite-221910/kite-experiments-config:latest
         ports: ["8888:8888", "9193:9193"]
         environment:
-            CONFIG_REPOSITORY_URL: "https://github.com/smitienko96/kite-config-repo.git"
+#            CONFIG_REPOSITORY_URL: "https://github.com/smitienko96/kite-config-repo.git"
+            CONFIG_REPOSITORY_URL: "https://github.com/quantizator/KiteConfig.git"
             EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
             KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
             KAFKA_LOGGING_TOPIC: "logging-stream"
