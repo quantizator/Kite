@@ -24,7 +24,7 @@ public class CircuitBreakerHelper {
      * @param <T>
      * @return
      */
-    public static <T> Flux<T> wrapFluxWithHystrix(Flux<T> unwrapped, String commandName, Flux<T> fallbackFlux) {
+    public static <T> Flux<T> wrapWithHystrix(Flux<T> unwrapped, String commandName, Flux<T> fallbackFlux) {
         return HystrixCommands.from(unwrapped)
                 .commandName(commandName)
                 .fallback(fallbackFlux)
@@ -42,7 +42,7 @@ public class CircuitBreakerHelper {
      * @param <T>
      * @return
      */
-    public static <T> Mono<T> wrapMonoWithHystrix(Mono<T> unwrapped, String commandName, Mono<T> fallbackMono) {
+    public static <T> Mono<T> wrapWithHystrix(Mono<T> unwrapped, String commandName, Mono<T> fallbackMono) {
         return HystrixCommands.from(unwrapped)
                 .commandName(commandName)
                 .commandProperties(HystrixCommandProperties.Setter()
