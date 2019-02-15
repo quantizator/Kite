@@ -106,7 +106,8 @@ dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.9.7")
     
     implementation("org.apache.commons:commons-lang3:3.7")
-
+    implementation("org.apache.commons:commons-collections4:4.0")
+    
     implementation('javax.validation:validation-api:2.0.1.Final')
 //    implementation('org.ajbrown:name-machine:1.0.0')
     implementation("org.mongodb:mongodb-driver-core:3.9.0")

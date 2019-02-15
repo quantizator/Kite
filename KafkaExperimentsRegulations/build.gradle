@@ -106,12 +106,12 @@ dependencies {
     implementation("io.confluent:kafka-avro-serializer:5.0.1")
 
     implementation("org.apache.commons:commons-lang3:3.7")
+    implementation("org.apache.commons:commons-collections4:4.0")
 
     implementation('javax.validation:validation-api:2.0.1.Final')
     implementation("org.mongodb:mongodb-driver-core:3.9.0")
     implementation("org.mongodb:mongodb-driver-async:3.9.0")
     implementation("org.mongodb:bson:3.9.0")
-    implementation("org.mongodb:mongodb-driver-reactivestreams:1.10.0")
     implementation("org.mongodb:mongodb-driver-reactivestreams:1.10.0")
     testImplementation('org.springframework.boot:spring-boot-starter-test')
     testImplementation('org.springframework.cloud:spring-cloud-stream-test-support')
