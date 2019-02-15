@@ -41,11 +41,17 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 apply plugin: "com.bmuschko.docker-spring-boot-application"
+
+def docker_registry_url = DOCKER_REGISTRY_URL
+
 docker {
     registryCredentials {
-        url = 'https://gcr.io'
-        username = '_json_key'
-        password = file(GCE_KEY_LOCATION).text
+//        url = 'https://gcr.io'
+        url = "https://${docker_registry_url}"
+//        username = '_json_key'
+//        password = file(GCE_KEY_LOCATION).text
+        username = DOCKER_USERNAME
+        password = DOCKER_PASSWORD
     }
 }
 apply plugin: 'maven-publish'
@@ -138,7 +144,6 @@ import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 
 def docker_application_name = "kafka-experiments-documents"
 def docker_healthcheck_port = "\${DOCUMENTS_SERVICE_MANAGEMENT_PORT}"
-def project_id = GCE_PROJECT_ID
 
 task createDockerfile(type: Dockerfile) {
     group 'build'
@@ -156,7 +161,7 @@ task buildImage(type: DockerBuildImage) {
     group 'build'
     dependsOn createDockerfile
     inputDir = createDockerfile.destFile.asFile.orNull.parentFile
-    tags = ["eu.gcr.io/${project_id}/${docker_application_name}:latest"]
+    tags = ["${docker_registry_url}/${docker_application_name}:latest"]
 }
 
 task pushImage(type: DockerPushImage) {

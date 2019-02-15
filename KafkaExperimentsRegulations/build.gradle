@@ -37,11 +37,16 @@ lombok {
 apply plugin: "com.commercehub.gradle.plugin.avro"
 
 apply plugin: "com.bmuschko.docker-spring-boot-application"
+
+def docker_registry_url = DOCKER_REGISTRY_URL
 docker {
     registryCredentials {
-        url = 'https://gcr.io'
-        username = '_json_key'
-        password = file(GCE_KEY_LOCATION).text
+//        url = 'https://gcr.io'
+        url = "https://${docker_registry_url}"
+//        username = '_json_key'
+//        password = file(GCE_KEY_LOCATION).text
+        username = DOCKER_USERNAME
+        password = DOCKER_PASSWORD
     }
 }
 
@@ -93,6 +98,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.confluent:monitoring-interceptors:3.3.0")
+    implementation("joda-time:joda-time")
     implementation("io.projectreactor:reactor-core")
     implementation("org.springframework.kafka:spring-kafka")
     implementation("org.apache.kafka:kafka-log4j-appender:1.0.0")
@@ -156,7 +162,7 @@ task buildImage(type: DockerBuildImage) {
     group 'build'
     dependsOn createDockerfile
     inputDir = createDockerfile.destFile.asFile.orNull.parentFile
-    tags = ["eu.gcr.io/${project_id}/${docker_application_name}:latest"]
+    tags = ["${docker_registry_url}/${docker_application_name}:latest"]
 }
 
 task pushImage(type: DockerPushImage) {

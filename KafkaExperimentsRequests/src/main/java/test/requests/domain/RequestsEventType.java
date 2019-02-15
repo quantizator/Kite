@@ -18,6 +18,7 @@ public enum RequestsEventType implements EventType {
     DOCUMENT_REJECTED("Неудачная попытка прикрепить документ к заявлению"),
     FIELDS_FILLED("Заполнены поля заявления"),
     STATUS_CHANGED("Состояние заявления изменено"),
+    APPLICATION_REGISTERED("Заявление зарегистрировано"),
     APPLICATION_ARCHIVED("Заявление сдано в архив");
 
     private String description;

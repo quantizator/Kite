@@ -10,6 +10,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import test.common.domain.DocumentTypeCode;
+import test.common.service.CircuitBreakerHelper;
 import test.documents.domain.published.PublishedConditionSelection;
 import test.documents.domain.published.PublishedDocumentTypeCode;
 import test.documents.domain.published.PublishedServiceConditionsSelection;
@@ -46,8 +47,7 @@ public class RestRegulationsService implements IRegulationsService {
                 .retrieve().bodyToMono(PublishedRegulation.class)
                 .flatMapMany(r -> getDocumentFieldsForQuestionary(r.getQuestionaryDocumentType()));
 
-        return wrapWithHystrix(result, "getApplicantQuestionaryFields",
-                "APPLICATION_QUESTIONARY_FIELDS",
+        return CircuitBreakerHelper.wrapWithHystrix(result, "getApplicantQuestionaryFields",
                 Flux.error(new RuntimeException("Unable to fetch applicant questionary fields")));
     }
 
@@ -60,8 +60,7 @@ public class RestRegulationsService implements IRegulationsService {
                 .retrieve()
                 .bodyToFlux(PublishedDocumentTypeCode.class).map(code -> new DocumentTypeCode(code.getCode()));
 
-        return wrapWithHystrix(result, "getApplicantDocumentTypes",
-                "GET_APPLICANT_DOCUMENT_TYPES", getDefaultApplicantDocumentTypes(applicantId, applicationType));
+        return CircuitBreakerHelper.wrapWithHystrix(result, "getApplicantDocumentTypes", getDefaultApplicantDocumentTypes(applicantId, applicationType));
     }
 
 
@@ -96,27 +95,6 @@ public class RestRegulationsService implements IRegulationsService {
         conditions.setConditions(selections);
 
         return conditions;
-    }
-
-    /**
-     * Оборачивает неболкирующий вызов в команду Hystrix.
-     *
-     * @param unwrapped
-     * @param commandName
-     * @param checkpointName
-     * @param fallbackFlux
-     * @param <T>
-     * @return
-     */
-    private <T> Flux<T> wrapWithHystrix(Flux<T> unwrapped, String commandName, String checkpointName, Flux<T> fallbackFlux) {
-//        return HystrixCommands.from(unwrapped)
-//                .commandName(commandName)
-//                .fallback(fallbackFlux)
-//                .toFlux()
-//                .subscribeOn(Schedulers.elastic())
-        return unwrapped
-                .log()
-                .checkpoint(checkpointName);
     }
 
     private WebClient buildWebClient() {

@@ -16,7 +16,7 @@ public class SupplyPassportDataCommandHandler implements NonReturningCommandHand
 
     @Override
     public Mono<Void> handle(SupplyPassportDataCommand command) {
-        return CircuitBreakerHelper.wrapMonoWithHystrix(
+        return CircuitBreakerHelper.wrapWithHystrix(
                 repository.get(new SNILS(command.getApplicantSNILS()))
                         .doOnNext(applicant ->
                                 applicant.supplyPassportData(command.getPassportSeries(), command.getPassportNumber(),

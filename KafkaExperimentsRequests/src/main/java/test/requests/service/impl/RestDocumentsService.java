@@ -1,7 +1,7 @@
 package test.requests.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import test.common.domain.DocumentTypeCode;
 import test.common.domain.DocumentTypeId;
+import test.common.service.CircuitBreakerHelper;
 import test.documents.domain.published.PublishedDocumentField;
 import test.documents.domain.published.PublishedDocumentType;
 import test.documents.domain.published.PublishedDocumentTypeCode;
@@ -46,8 +47,7 @@ public class RestDocumentsService implements IDocumentsService {
                         new DocumentTypeCode(t.getCode().getCode()),
                         new DocumentTypeId(t.getDocumentTypeId())));
 
-        return wrapWithHystrix(result, "getDocumentTypesForCodes",
-                "GET_DOCUMENT_TYPES_FOR_CODES",
+        return CircuitBreakerHelper.wrapWithHystrix(result,"getDocumentTypesForCodes",
                 getDefaultTypesForCodes(typeCodes));
 
     }
@@ -73,31 +73,11 @@ public class RestDocumentsService implements IDocumentsService {
                 .retrieve().bodyToFlux(PublishedDocumentField.class)
                 .map(f -> new DocumentFieldCode(f.getCode()));
 
-        return wrapWithHystrix(result,
+        return CircuitBreakerHelper.wrapWithHystrix(result,
                 "getFieldCodesForDocumentType",
-                "GET_FIELD_CODES_FOR_DOCUMENT_TYPE",
                 Flux.error(new RuntimeException(String.format("Unable to fetch codes for document type [%s]", documentType.code()))));
     }
 
-    /**
-     * Оборачивает неболкирующий вызов в команду Hystrix.
-     *
-     * @param unwrapped
-     * @param commandName
-     * @param checkpointName
-     * @param fallbackFlux
-     * @param <T>
-     * @return
-     */
-    private <T> Flux<T> wrapWithHystrix(Flux<T> unwrapped, String commandName, String checkpointName, Flux<T> fallbackFlux) {
-//        return HystrixCommands.from(unwrapped)
-//                .commandName(commandName)
-//                .fallback(fallbackFlux)
-//                .toFlux()
-        return unwrapped
-                .log()
-                .checkpoint(checkpointName);
-    }
 
     private WebClient buildWebClient() {
         return builder.baseUrl("http://" + documentsServiceName).build();
