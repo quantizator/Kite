@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
     postgres:
-        image: eu.gcr.io/kite-221910/postgres
+        image: 192.168.100.212:443/postgres
         ports: ["5432:5432"]
         environment:
             POSTGRES_USER: postgres

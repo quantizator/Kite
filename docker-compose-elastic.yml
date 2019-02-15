@@ -17,7 +17,7 @@ services:
             replicas: 1
         networks: [elastic]
     logstash:
-        image: eu.gcr.io/kite-221910/logstash:snapshot
+        image: 192.168.100.212:443/logstash:snapshot
         ports: ["9251:9600"]
         environment:
             KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"

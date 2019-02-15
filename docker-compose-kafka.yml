@@ -19,7 +19,7 @@ services:
                 max_attempts: 10
                 window: 120s
     broker:
-        image: eu.gcr.io/kite-221910/kafka-broker
+        image: 192.168.100.212:443/kafka-broker
         ports:
            - target: 9092
              published: 9092
@@ -38,7 +38,7 @@ services:
             KAFKA_CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: "2"
             KAFKA_CONFLUENT_METRICS_REPORTER_VOLUME_METRICS_REFRESH_MS: "3000"
         volumes:
-            - /mnt/kafkadata/broker:/kafka
+            - /srv/kafkadata/broker:/kafka
         depends_on:
             - zookeeper
         networks: [kafka]
@@ -149,7 +149,7 @@ services:
             CONTROL_CENTER_KSQL_URL: "http://kafka-ksql:9024"
             CONTROL_CENTER_REPLICATION_FACTOR: 1
         volumes:
-            - /mnt/kafkadata/controlcenter:/var/lib/confluent-control-center
+            - /srv/kafkadata/controlcenter:/var/lib/confluent-control-center
         depends_on:
             - zookeeper
             - broker
